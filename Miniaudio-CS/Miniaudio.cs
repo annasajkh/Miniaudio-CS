@@ -228,13 +228,13 @@ namespace Miniaudio
         public void* pUserData;
 
         [NativeTypeName("void *(*)(size_t, void *)")]
-        public delegate* unmanaged[Cdecl]<nuint, void*, void*> onMalloc;
+        public IntPtr onMalloc;
 
         [NativeTypeName("void *(*)(void *, size_t, void *)")]
-        public delegate* unmanaged[Cdecl]<void*, nuint, void*, void*> onRealloc;
+        public IntPtr onRealloc;
 
         [NativeTypeName("void (*)(void *, void *)")]
-        public delegate* unmanaged[Cdecl]<void*, void*, void> onFree;
+        public IntPtr onFree;
     }
 
     public partial struct ma_lcg
@@ -285,10 +285,13 @@ namespace Miniaudio
         ma_thread_priority_default = 0,
     }
 
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public unsafe delegate void ma_log_callback_proc(void* pUserData, [NativeTypeName("ma_uint32")] uint level, [NativeTypeName("const char *")] sbyte* pMessage);
+
     public unsafe partial struct ma_log_callback
     {
         [NativeTypeName("ma_log_callback_proc")]
-        public delegate* unmanaged[Cdecl]<void*, uint, sbyte*, void> onLog;
+        public IntPtr onLog;
 
         public void* pUserData;
     }
@@ -313,15 +316,16 @@ namespace Miniaudio
             public ma_log_callback e2;
             public ma_log_callback e3;
 
-            public ref ma_log_callback this[int index]
+            public unsafe ref ma_log_callback this[int index]
             {
                 get
                 {
-                    return ref AsSpan()[index];
+                    fixed (ma_log_callback* pThis = &e0)
+                    {
+                        return ref pThis[index];
+                    }
                 }
             }
-
-            public Span<ma_log_callback> AsSpan() => MemoryMarshal.CreateSpan(ref e0, 4);
         }
     }
 
@@ -1050,37 +1054,37 @@ namespace Miniaudio
         }
     }
 
-    public unsafe partial struct ma_resampling_backend_vtable
+    public partial struct ma_resampling_backend_vtable
     {
         [NativeTypeName("ma_result (*)(void *, const ma_resampler_config *, size_t *)")]
-        public delegate* unmanaged[Cdecl]<void*, ma_resampler_config*, nuint*, ma_result> onGetHeapSize;
+        public IntPtr onGetHeapSize;
 
         [NativeTypeName("ma_result (*)(void *, const ma_resampler_config *, void *, ma_resampling_backend **)")]
-        public delegate* unmanaged[Cdecl]<void*, ma_resampler_config*, void*, void**, ma_result> onInit;
+        public IntPtr onInit;
 
         [NativeTypeName("void (*)(void *, ma_resampling_backend *, const ma_allocation_callbacks *)")]
-        public delegate* unmanaged[Cdecl]<void*, void*, ma_allocation_callbacks*, void> onUninit;
+        public IntPtr onUninit;
 
         [NativeTypeName("ma_result (*)(void *, ma_resampling_backend *, const void *, ma_uint64 *, void *, ma_uint64 *)")]
-        public delegate* unmanaged[Cdecl]<void*, void*, void*, ulong*, void*, ulong*, ma_result> onProcess;
+        public IntPtr onProcess;
 
         [NativeTypeName("ma_result (*)(void *, ma_resampling_backend *, ma_uint32, ma_uint32)")]
-        public delegate* unmanaged[Cdecl]<void*, void*, uint, uint, ma_result> onSetRate;
+        public IntPtr onSetRate;
 
         [NativeTypeName("ma_uint64 (*)(void *, const ma_resampling_backend *)")]
-        public delegate* unmanaged[Cdecl]<void*, void*, ulong> onGetInputLatency;
+        public IntPtr onGetInputLatency;
 
         [NativeTypeName("ma_uint64 (*)(void *, const ma_resampling_backend *)")]
-        public delegate* unmanaged[Cdecl]<void*, void*, ulong> onGetOutputLatency;
+        public IntPtr onGetOutputLatency;
 
         [NativeTypeName("ma_result (*)(void *, const ma_resampling_backend *, ma_uint64, ma_uint64 *)")]
-        public delegate* unmanaged[Cdecl]<void*, void*, ulong, ulong*, ma_result> onGetRequiredInputFrameCount;
+        public IntPtr onGetRequiredInputFrameCount;
 
         [NativeTypeName("ma_result (*)(void *, const ma_resampling_backend *, ma_uint64, ma_uint64 *)")]
-        public delegate* unmanaged[Cdecl]<void*, void*, ulong, ulong*, ma_result> onGetExpectedOutputFrameCount;
+        public IntPtr onGetExpectedOutputFrameCount;
 
         [NativeTypeName("ma_result (*)(void *, ma_resampling_backend *)")]
-        public delegate* unmanaged[Cdecl]<void*, void*, ma_result> onReset;
+        public IntPtr onReset;
     }
 
     public enum ma_resample_algorithm
@@ -1335,29 +1339,33 @@ namespace Miniaudio
         public void* _pHeap;
     }
 
-    public unsafe partial struct ma_data_source_vtable
+    public partial struct ma_data_source_vtable
     {
         [NativeTypeName("ma_result (*)(ma_data_source *, void *, ma_uint64, ma_uint64 *)")]
-        public delegate* unmanaged[Cdecl]<void*, void*, ulong, ulong*, ma_result> onRead;
+        public IntPtr onRead;
 
         [NativeTypeName("ma_result (*)(ma_data_source *, ma_uint64)")]
-        public delegate* unmanaged[Cdecl]<void*, ulong, ma_result> onSeek;
+        public IntPtr onSeek;
 
         [NativeTypeName("ma_result (*)(ma_data_source *, ma_format *, ma_uint32 *, ma_uint32 *, ma_channel *, size_t)")]
-        public delegate* unmanaged[Cdecl]<void*, ma_format*, uint*, uint*, byte*, nuint, ma_result> onGetDataFormat;
+        public IntPtr onGetDataFormat;
 
         [NativeTypeName("ma_result (*)(ma_data_source *, ma_uint64 *)")]
-        public delegate* unmanaged[Cdecl]<void*, ulong*, ma_result> onGetCursor;
+        public IntPtr onGetCursor;
 
         [NativeTypeName("ma_result (*)(ma_data_source *, ma_uint64 *)")]
-        public delegate* unmanaged[Cdecl]<void*, ulong*, ma_result> onGetLength;
+        public IntPtr onGetLength;
 
         [NativeTypeName("ma_result (*)(ma_data_source *, ma_bool32)")]
-        public delegate* unmanaged[Cdecl]<void*, uint, ma_result> onSetLooping;
+        public IntPtr onSetLooping;
 
         [NativeTypeName("ma_uint32")]
         public uint flags;
     }
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    [return: NativeTypeName("ma_data_source *")]
+    public unsafe delegate void* ma_data_source_get_next_proc([NativeTypeName("ma_data_source *")] void* pDataSource);
 
     public unsafe partial struct ma_data_source_config
     {
@@ -1389,7 +1397,7 @@ namespace Miniaudio
         public void* pNext;
 
         [NativeTypeName("ma_data_source_get_next_proc")]
-        public delegate* unmanaged[Cdecl]<void*, void*> onGetNext;
+        public IntPtr onGetNext;
 
         [NativeTypeName("ma_bool32")]
         public uint isLooping;
@@ -1549,10 +1557,10 @@ namespace Miniaudio
         public uint counter;
     }
 
-    public unsafe partial struct ma_async_notification_callbacks
+    public partial struct ma_async_notification_callbacks
     {
         [NativeTypeName("void (*)(ma_async_notification *)")]
-        public delegate* unmanaged[Cdecl]<void*, void> onSignal;
+        public IntPtr onSignal;
     }
 
     public partial struct ma_async_notification_poll
@@ -1602,6 +1610,9 @@ namespace Miniaudio
         public void* _pHeap;
     }
 
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public unsafe delegate ma_result ma_job_proc(ma_job* pJob);
+
     public enum ma_job_type
     {
         MA_JOB_TYPE_QUIT = 0,
@@ -1634,7 +1645,7 @@ namespace Miniaudio
         public _data_e__Union data;
 
         [StructLayout(LayoutKind.Explicit)]
-        public partial struct _toc_e__Union
+        public unsafe partial struct _toc_e__Union
         {
             [FieldOffset(0)]
             [NativeTypeName("__AnonymousRecord_miniaudio_L2663_C9")]
@@ -1672,10 +1683,10 @@ namespace Miniaudio
             [NativeTypeName("__AnonymousRecord_miniaudio_L2763_C9")]
             public _device_e__Union device;
 
-            public unsafe partial struct _custom_e__Struct
+            public partial struct _custom_e__Struct
             {
                 [NativeTypeName("ma_job_proc")]
-                public delegate* unmanaged[Cdecl]<ma_job*, ma_result> proc;
+                public IntPtr proc;
 
                 [NativeTypeName("ma_uintptr")]
                 public ulong data0;
@@ -2017,7 +2028,7 @@ namespace Miniaudio
         public _data_e__Union data;
 
         [StructLayout(LayoutKind.Explicit)]
-        public partial struct _data_e__Union
+        public unsafe partial struct _data_e__Union
         {
             [FieldOffset(0)]
             [NativeTypeName("__AnonymousRecord_miniaudio_L3033_C9")]
@@ -2056,6 +2067,15 @@ namespace Miniaudio
             }
         }
     }
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public unsafe delegate void ma_device_notification_proc([NativeTypeName("const ma_device_notification *")] ma_device_notification* pNotification);
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public unsafe delegate void ma_device_data_proc(ma_device* pDevice, void* pOutput, [NativeTypeName("const void *")] void* pInput, [NativeTypeName("ma_uint32")] uint frameCount);
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public unsafe delegate void ma_stop_proc(ma_device* pDevice);
 
     public enum ma_device_type
     {
@@ -2355,15 +2375,16 @@ namespace Miniaudio
             public _Anonymous_e__Struct e62;
             public _Anonymous_e__Struct e63;
 
-            public ref _Anonymous_e__Struct this[int index]
+            public unsafe ref _Anonymous_e__Struct this[int index]
             {
                 get
                 {
-                    return ref AsSpan()[index];
+                    fixed (_Anonymous_e__Struct* pThis = &e0)
+                    {
+                        return ref pThis[index];
+                    }
                 }
             }
-
-            public Span<_Anonymous_e__Struct> AsSpan() => MemoryMarshal.CreateSpan(ref e0, 64);
         }
     }
 
@@ -2398,13 +2419,13 @@ namespace Miniaudio
         public byte noFixedSizedCallback;
 
         [NativeTypeName("ma_device_data_proc")]
-        public delegate* unmanaged[Cdecl]<ma_device*, void*, void*, uint, void> dataCallback;
+        public IntPtr dataCallback;
 
         [NativeTypeName("ma_device_notification_proc")]
-        public delegate* unmanaged[Cdecl]<ma_device_notification*, void> notificationCallback;
+        public IntPtr notificationCallback;
 
         [NativeTypeName("ma_stop_proc")]
-        public delegate* unmanaged[Cdecl]<ma_device*, void> stopCallback;
+        public IntPtr stopCallback;
 
         public void* pUserData;
 
@@ -2562,6 +2583,10 @@ namespace Miniaudio
         }
     }
 
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    [return: NativeTypeName("ma_bool32")]
+    public unsafe delegate uint ma_enum_devices_callback_proc(ma_context* pContext, ma_device_type deviceType, [NativeTypeName("const ma_device_info *")] ma_device_info* pInfo, void* pUserData);
+
     public unsafe partial struct ma_device_descriptor
     {
         [NativeTypeName("const ma_device_id *")]
@@ -2590,46 +2615,46 @@ namespace Miniaudio
         public uint periodCount;
     }
 
-    public unsafe partial struct ma_backend_callbacks
+    public partial struct ma_backend_callbacks
     {
         [NativeTypeName("ma_result (*)(ma_context *, const ma_context_config *, ma_backend_callbacks *)")]
-        public delegate* unmanaged[Cdecl]<ma_context*, ma_context_config*, ma_backend_callbacks*, ma_result> onContextInit;
+        public IntPtr onContextInit;
 
         [NativeTypeName("ma_result (*)(ma_context *)")]
-        public delegate* unmanaged[Cdecl]<ma_context*, ma_result> onContextUninit;
+        public IntPtr onContextUninit;
 
         [NativeTypeName("ma_result (*)(ma_context *, ma_enum_devices_callback_proc, void *)")]
-        public delegate* unmanaged[Cdecl]<ma_context*, delegate* unmanaged[Cdecl]<ma_context*, ma_device_type, ma_device_info*, void*, uint>, void*, ma_result> onContextEnumerateDevices;
+        public IntPtr onContextEnumerateDevices;
 
         [NativeTypeName("ma_result (*)(ma_context *, ma_device_type, const ma_device_id *, ma_device_info *)")]
-        public delegate* unmanaged[Cdecl]<ma_context*, ma_device_type, ma_device_id*, ma_device_info*, ma_result> onContextGetDeviceInfo;
+        public IntPtr onContextGetDeviceInfo;
 
         [NativeTypeName("ma_result (*)(ma_device *, const ma_device_config *, ma_device_descriptor *, ma_device_descriptor *)")]
-        public delegate* unmanaged[Cdecl]<ma_device*, ma_device_config*, ma_device_descriptor*, ma_device_descriptor*, ma_result> onDeviceInit;
+        public IntPtr onDeviceInit;
 
         [NativeTypeName("ma_result (*)(ma_device *)")]
-        public delegate* unmanaged[Cdecl]<ma_device*, ma_result> onDeviceUninit;
+        public IntPtr onDeviceUninit;
 
         [NativeTypeName("ma_result (*)(ma_device *)")]
-        public delegate* unmanaged[Cdecl]<ma_device*, ma_result> onDeviceStart;
+        public IntPtr onDeviceStart;
 
         [NativeTypeName("ma_result (*)(ma_device *)")]
-        public delegate* unmanaged[Cdecl]<ma_device*, ma_result> onDeviceStop;
+        public IntPtr onDeviceStop;
 
         [NativeTypeName("ma_result (*)(ma_device *, void *, ma_uint32, ma_uint32 *)")]
-        public delegate* unmanaged[Cdecl]<ma_device*, void*, uint, uint*, ma_result> onDeviceRead;
+        public IntPtr onDeviceRead;
 
         [NativeTypeName("ma_result (*)(ma_device *, const void *, ma_uint32, ma_uint32 *)")]
-        public delegate* unmanaged[Cdecl]<ma_device*, void*, uint, uint*, ma_result> onDeviceWrite;
+        public IntPtr onDeviceWrite;
 
         [NativeTypeName("ma_result (*)(ma_device *)")]
-        public delegate* unmanaged[Cdecl]<ma_device*, ma_result> onDeviceDataLoop;
+        public IntPtr onDeviceDataLoop;
 
         [NativeTypeName("ma_result (*)(ma_device *)")]
-        public delegate* unmanaged[Cdecl]<ma_device*, ma_result> onDeviceDataLoopWakeup;
+        public IntPtr onDeviceDataLoopWakeup;
 
         [NativeTypeName("ma_result (*)(ma_device *, ma_device_type, ma_device_info *)")]
-        public delegate* unmanaged[Cdecl]<ma_device*, ma_device_type, ma_device_info*, ma_result> onDeviceGetInfo;
+        public IntPtr onDeviceGetInfo;
     }
 
     public unsafe partial struct ma_context_config
@@ -2639,7 +2664,7 @@ namespace Miniaudio
         public ma_thread_priority threadPriority;
 
         [NativeTypeName("size_t")]
-        public nuint threadStackSize;
+        public UIntPtr threadStackSize;
 
         public void* pUserData;
 
@@ -2773,7 +2798,7 @@ namespace Miniaudio
         public ma_thread_priority threadPriority;
 
         [NativeTypeName("size_t")]
-        public nuint threadStackSize;
+        public UIntPtr threadStackSize;
 
         public void* pUserData;
 
@@ -2806,7 +2831,10 @@ namespace Miniaudio
         {
             get
             {
-                return ref MemoryMarshal.GetReference(MemoryMarshal.CreateSpan(ref Anonymous1.wasapi, 1));
+                fixed (_Anonymous1_e__Union* pField = &Anonymous1)
+                {
+                    return ref pField->wasapi;
+                }
             }
         }
 
@@ -2814,7 +2842,10 @@ namespace Miniaudio
         {
             get
             {
-                return ref MemoryMarshal.GetReference(MemoryMarshal.CreateSpan(ref Anonymous1.dsound, 1));
+                fixed (_Anonymous1_e__Union* pField = &Anonymous1)
+                {
+                    return ref pField->dsound;
+                }
             }
         }
 
@@ -2822,7 +2853,10 @@ namespace Miniaudio
         {
             get
             {
-                return ref MemoryMarshal.GetReference(MemoryMarshal.CreateSpan(ref Anonymous1.winmm, 1));
+                fixed (_Anonymous1_e__Union* pField = &Anonymous1)
+                {
+                    return ref pField->winmm;
+                }
             }
         }
 
@@ -2830,7 +2864,10 @@ namespace Miniaudio
         {
             get
             {
-                return ref MemoryMarshal.GetReference(MemoryMarshal.CreateSpan(ref Anonymous1.jack, 1));
+                fixed (_Anonymous1_e__Union* pField = &Anonymous1)
+                {
+                    return ref pField->jack;
+                }
             }
         }
 
@@ -2838,7 +2875,10 @@ namespace Miniaudio
         {
             get
             {
-                return ref MemoryMarshal.GetReference(MemoryMarshal.CreateSpan(ref Anonymous1.null_backend, 1));
+                fixed (_Anonymous1_e__Union* pField = &Anonymous1)
+                {
+                    return ref pField->null_backend;
+                }
             }
         }
 
@@ -2846,7 +2886,10 @@ namespace Miniaudio
         {
             get
             {
-                return ref MemoryMarshal.GetReference(MemoryMarshal.CreateSpan(ref Anonymous2.win32, 1));
+                fixed (_Anonymous2_e__Union* pField = &Anonymous2)
+                {
+                    return ref pField->win32;
+                }
             }
         }
 
@@ -2854,7 +2897,10 @@ namespace Miniaudio
         {
             get
             {
-                return ref MemoryMarshal.GetReference(MemoryMarshal.CreateSpan(ref Anonymous2._unused, 1));
+                fixed (_Anonymous2_e__Union* pField = &Anonymous2)
+                {
+                    return ref pField->_unused;
+                }
             }
         }
 
@@ -2923,15 +2969,16 @@ namespace Miniaudio
                     public ma_context_command__wasapi e2;
                     public ma_context_command__wasapi e3;
 
-                    public ref ma_context_command__wasapi this[int index]
+                    public unsafe ref ma_context_command__wasapi this[int index]
                     {
                         get
                         {
-                            return ref AsSpan()[index];
+                            fixed (ma_context_command__wasapi* pThis = &e0)
+                            {
+                                return ref pThis[index];
+                            }
                         }
                     }
-
-                    public Span<ma_context_command__wasapi> AsSpan() => MemoryMarshal.CreateSpan(ref e0, 4);
                 }
             }
 
@@ -3154,13 +3201,13 @@ namespace Miniaudio
         public ma_atomic_device_state state;
 
         [NativeTypeName("ma_device_data_proc")]
-        public delegate* unmanaged[Cdecl]<ma_device*, void*, void*, uint, void> onData;
+        public IntPtr onData;
 
         [NativeTypeName("ma_device_notification_proc")]
-        public delegate* unmanaged[Cdecl]<ma_device_notification*, void> onNotification;
+        public IntPtr onNotification;
 
         [NativeTypeName("ma_stop_proc")]
-        public delegate* unmanaged[Cdecl]<ma_device*, void> onStop;
+        public IntPtr onStop;
 
         public void* pUserData;
 
@@ -3216,7 +3263,10 @@ namespace Miniaudio
         {
             get
             {
-                return ref MemoryMarshal.GetReference(MemoryMarshal.CreateSpan(ref Anonymous4.wasapi, 1));
+                fixed (_Anonymous4_e__Union* pField = &Anonymous4)
+                {
+                    return ref pField->wasapi;
+                }
             }
         }
 
@@ -3224,7 +3274,10 @@ namespace Miniaudio
         {
             get
             {
-                return ref MemoryMarshal.GetReference(MemoryMarshal.CreateSpan(ref Anonymous4.dsound, 1));
+                fixed (_Anonymous4_e__Union* pField = &Anonymous4)
+                {
+                    return ref pField->dsound;
+                }
             }
         }
 
@@ -3232,7 +3285,10 @@ namespace Miniaudio
         {
             get
             {
-                return ref MemoryMarshal.GetReference(MemoryMarshal.CreateSpan(ref Anonymous4.winmm, 1));
+                fixed (_Anonymous4_e__Union* pField = &Anonymous4)
+                {
+                    return ref pField->winmm;
+                }
             }
         }
 
@@ -3240,7 +3296,10 @@ namespace Miniaudio
         {
             get
             {
-                return ref MemoryMarshal.GetReference(MemoryMarshal.CreateSpan(ref Anonymous4.jack, 1));
+                fixed (_Anonymous4_e__Union* pField = &Anonymous4)
+                {
+                    return ref pField->jack;
+                }
             }
         }
 
@@ -3248,7 +3307,10 @@ namespace Miniaudio
         {
             get
             {
-                return ref MemoryMarshal.GetReference(MemoryMarshal.CreateSpan(ref Anonymous4.null_device, 1));
+                fixed (_Anonymous4_e__Union* pField = &Anonymous4)
+                {
+                    return ref pField->null_device;
+                }
             }
         }
 
@@ -3649,31 +3711,31 @@ namespace Miniaudio
         public ulong sizeInBytes;
     }
 
-    public unsafe partial struct ma_vfs_callbacks
+    public partial struct ma_vfs_callbacks
     {
         [NativeTypeName("ma_result (*)(ma_vfs *, const char *, ma_uint32, ma_vfs_file *)")]
-        public delegate* unmanaged[Cdecl]<void*, sbyte*, uint, void**, ma_result> onOpen;
+        public IntPtr onOpen;
 
         [NativeTypeName("ma_result (*)(ma_vfs *, const wchar_t *, ma_uint32, ma_vfs_file *)")]
-        public delegate* unmanaged[Cdecl]<void*, ushort*, uint, void**, ma_result> onOpenW;
+        public IntPtr onOpenW;
 
         [NativeTypeName("ma_result (*)(ma_vfs *, ma_vfs_file)")]
-        public delegate* unmanaged[Cdecl]<void*, void*, ma_result> onClose;
+        public IntPtr onClose;
 
         [NativeTypeName("ma_result (*)(ma_vfs *, ma_vfs_file, void *, size_t, size_t *)")]
-        public delegate* unmanaged[Cdecl]<void*, void*, void*, nuint, nuint*, ma_result> onRead;
+        public IntPtr onRead;
 
         [NativeTypeName("ma_result (*)(ma_vfs *, ma_vfs_file, const void *, size_t, size_t *)")]
-        public delegate* unmanaged[Cdecl]<void*, void*, void*, nuint, nuint*, ma_result> onWrite;
+        public IntPtr onWrite;
 
         [NativeTypeName("ma_result (*)(ma_vfs *, ma_vfs_file, ma_int64, ma_seek_origin)")]
-        public delegate* unmanaged[Cdecl]<void*, void*, long, ma_seek_origin, ma_result> onSeek;
+        public IntPtr onSeek;
 
         [NativeTypeName("ma_result (*)(ma_vfs *, ma_vfs_file, ma_int64 *)")]
-        public delegate* unmanaged[Cdecl]<void*, void*, long*, ma_result> onTell;
+        public IntPtr onTell;
 
         [NativeTypeName("ma_result (*)(ma_vfs *, ma_vfs_file, ma_file_info *)")]
-        public delegate* unmanaged[Cdecl]<void*, void*, ma_file_info*, ma_result> onInfo;
+        public IntPtr onInfo;
     }
 
     public partial struct ma_default_vfs
@@ -3682,6 +3744,15 @@ namespace Miniaudio
 
         public ma_allocation_callbacks allocationCallbacks;
     }
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public unsafe delegate ma_result ma_read_proc(void* pUserData, void* pBufferOut, [NativeTypeName("size_t")] UIntPtr bytesToRead, [NativeTypeName("size_t *")] UIntPtr* pBytesRead);
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public unsafe delegate ma_result ma_seek_proc(void* pUserData, [NativeTypeName("ma_int64")] long offset, ma_seek_origin origin);
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public unsafe delegate ma_result ma_tell_proc(void* pUserData, [NativeTypeName("ma_int64 *")] long* pCursor);
 
     public enum ma_encoding_format
     {
@@ -3700,23 +3771,32 @@ namespace Miniaudio
         public uint seekPointCount;
     }
 
-    public unsafe partial struct ma_decoding_backend_vtable
+    public partial struct ma_decoding_backend_vtable
     {
         [NativeTypeName("ma_result (*)(void *, ma_read_proc, ma_seek_proc, ma_tell_proc, void *, const ma_decoding_backend_config *, const ma_allocation_callbacks *, ma_data_source **)")]
-        public delegate* unmanaged[Cdecl]<void*, delegate* unmanaged[Cdecl]<void*, void*, nuint, nuint*, ma_result>, delegate* unmanaged[Cdecl]<void*, long, ma_seek_origin, ma_result>, delegate* unmanaged[Cdecl]<void*, long*, ma_result>, void*, ma_decoding_backend_config*, ma_allocation_callbacks*, void**, ma_result> onInit;
+        public IntPtr onInit;
 
         [NativeTypeName("ma_result (*)(void *, const char *, const ma_decoding_backend_config *, const ma_allocation_callbacks *, ma_data_source **)")]
-        public delegate* unmanaged[Cdecl]<void*, sbyte*, ma_decoding_backend_config*, ma_allocation_callbacks*, void**, ma_result> onInitFile;
+        public IntPtr onInitFile;
 
         [NativeTypeName("ma_result (*)(void *, const wchar_t *, const ma_decoding_backend_config *, const ma_allocation_callbacks *, ma_data_source **)")]
-        public delegate* unmanaged[Cdecl]<void*, ushort*, ma_decoding_backend_config*, ma_allocation_callbacks*, void**, ma_result> onInitFileW;
+        public IntPtr onInitFileW;
 
         [NativeTypeName("ma_result (*)(void *, const void *, size_t, const ma_decoding_backend_config *, const ma_allocation_callbacks *, ma_data_source **)")]
-        public delegate* unmanaged[Cdecl]<void*, void*, nuint, ma_decoding_backend_config*, ma_allocation_callbacks*, void**, ma_result> onInitMemory;
+        public IntPtr onInitMemory;
 
         [NativeTypeName("void (*)(void *, ma_data_source *, const ma_allocation_callbacks *)")]
-        public delegate* unmanaged[Cdecl]<void*, void*, ma_allocation_callbacks*, void> onUninit;
+        public IntPtr onUninit;
     }
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public unsafe delegate ma_result ma_decoder_read_proc(ma_decoder* pDecoder, void* pBufferOut, [NativeTypeName("size_t")] UIntPtr bytesToRead, [NativeTypeName("size_t *")] UIntPtr* pBytesRead);
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public unsafe delegate ma_result ma_decoder_seek_proc(ma_decoder* pDecoder, [NativeTypeName("ma_int64")] long byteOffset, ma_seek_origin origin);
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public unsafe delegate ma_result ma_decoder_tell_proc(ma_decoder* pDecoder, [NativeTypeName("ma_int64 *")] long* pCursor);
 
     public unsafe partial struct ma_decoder_config
     {
@@ -3765,13 +3845,13 @@ namespace Miniaudio
         public void* pBackendUserData;
 
         [NativeTypeName("ma_decoder_read_proc")]
-        public delegate* unmanaged[Cdecl]<ma_decoder*, void*, nuint, nuint*, ma_result> onRead;
+        public IntPtr onRead;
 
         [NativeTypeName("ma_decoder_seek_proc")]
-        public delegate* unmanaged[Cdecl]<ma_decoder*, long, ma_seek_origin, ma_result> onSeek;
+        public IntPtr onSeek;
 
         [NativeTypeName("ma_decoder_tell_proc")]
-        public delegate* unmanaged[Cdecl]<ma_decoder*, long*, ma_result> onTell;
+        public IntPtr onTell;
 
         public void* pUserData;
 
@@ -3830,13 +3910,28 @@ namespace Miniaudio
                 public byte* pData;
 
                 [NativeTypeName("size_t")]
-                public nuint dataSize;
+                public UIntPtr dataSize;
 
                 [NativeTypeName("size_t")]
-                public nuint currentReadPos;
+                public UIntPtr currentReadPos;
             }
         }
     }
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public unsafe delegate ma_result ma_encoder_write_proc(ma_encoder* pEncoder, [NativeTypeName("const void *")] void* pBufferIn, [NativeTypeName("size_t")] UIntPtr bytesToWrite, [NativeTypeName("size_t *")] UIntPtr* pBytesWritten);
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public unsafe delegate ma_result ma_encoder_seek_proc(ma_encoder* pEncoder, [NativeTypeName("ma_int64")] long offset, ma_seek_origin origin);
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public unsafe delegate ma_result ma_encoder_init_proc(ma_encoder* pEncoder);
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public unsafe delegate void ma_encoder_uninit_proc(ma_encoder* pEncoder);
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public unsafe delegate ma_result ma_encoder_write_pcm_frames_proc(ma_encoder* pEncoder, [NativeTypeName("const void *")] void* pFramesIn, [NativeTypeName("ma_uint64")] ulong frameCount, [NativeTypeName("ma_uint64 *")] ulong* pFramesWritten);
 
     public partial struct ma_encoder_config
     {
@@ -3858,19 +3953,19 @@ namespace Miniaudio
         public ma_encoder_config config;
 
         [NativeTypeName("ma_encoder_write_proc")]
-        public delegate* unmanaged[Cdecl]<ma_encoder*, void*, nuint, nuint*, ma_result> onWrite;
+        public IntPtr onWrite;
 
         [NativeTypeName("ma_encoder_seek_proc")]
-        public delegate* unmanaged[Cdecl]<ma_encoder*, long, ma_seek_origin, ma_result> onSeek;
+        public IntPtr onSeek;
 
         [NativeTypeName("ma_encoder_init_proc")]
-        public delegate* unmanaged[Cdecl]<ma_encoder*, ma_result> onInit;
+        public IntPtr onInit;
 
         [NativeTypeName("ma_encoder_uninit_proc")]
-        public delegate* unmanaged[Cdecl]<ma_encoder*, void> onUninit;
+        public IntPtr onUninit;
 
         [NativeTypeName("ma_encoder_write_pcm_frames_proc")]
-        public delegate* unmanaged[Cdecl]<ma_encoder*, void*, ulong, ulong*, ma_result> onWritePCMFrames;
+        public IntPtr onWritePCMFrames;
 
         public void* pUserData;
 
@@ -4126,7 +4221,7 @@ namespace Miniaudio
                 public void* pData;
 
                 [NativeTypeName("size_t")]
-                public nuint sizeInBytes;
+                public UIntPtr sizeInBytes;
             }
 
             public unsafe partial struct _decoded_e__Struct
@@ -4289,7 +4384,7 @@ namespace Miniaudio
         public uint seekCounter;
     }
 
-    public partial struct ma_resource_manager_data_source
+    public unsafe partial struct ma_resource_manager_data_source
     {
         [NativeTypeName("__AnonymousRecord_miniaudio_L6736_C5")]
         public _backend_e__Union backend;
@@ -4332,7 +4427,7 @@ namespace Miniaudio
         public uint jobThreadCount;
 
         [NativeTypeName("size_t")]
-        public nuint jobThreadStackSize;
+        public UIntPtr jobThreadStackSize;
 
         [NativeTypeName("ma_uint32")]
         public uint jobQueueCapacity;
@@ -4452,10 +4547,10 @@ namespace Miniaudio
     public unsafe partial struct ma_stack
     {
         [NativeTypeName("size_t")]
-        public nuint offset;
+        public UIntPtr offset;
 
         [NativeTypeName("size_t")]
-        public nuint sizeInBytes;
+        public UIntPtr sizeInBytes;
 
         [NativeTypeName("unsigned char[1]")]
         public fixed byte _data[1];
@@ -4476,13 +4571,13 @@ namespace Miniaudio
         ma_node_state_stopped = 1,
     }
 
-    public unsafe partial struct ma_node_vtable
+    public partial struct ma_node_vtable
     {
         [NativeTypeName("void (*)(ma_node *, const float **, ma_uint32 *, float **, ma_uint32 *)")]
-        public delegate* unmanaged[Cdecl]<void*, float**, uint*, float**, uint*, void> onProcess;
+        public IntPtr onProcess;
 
         [NativeTypeName("ma_result (*)(ma_node *, ma_uint32, ma_uint32 *)")]
-        public delegate* unmanaged[Cdecl]<void*, uint, uint*, ma_result> onGetRequiredInputFrameCount;
+        public IntPtr onGetRequiredInputFrameCount;
 
         [NativeTypeName("ma_uint8")]
         public byte inputBusCount;
@@ -4619,15 +4714,16 @@ namespace Miniaudio
             public ma_node_input_bus e0;
             public ma_node_input_bus e1;
 
-            public ref ma_node_input_bus this[int index]
+            public unsafe ref ma_node_input_bus this[int index]
             {
                 get
                 {
-                    return ref AsSpan()[index];
+                    fixed (ma_node_input_bus* pThis = &e0)
+                    {
+                        return ref pThis[index];
+                    }
                 }
             }
-
-            public Span<ma_node_input_bus> AsSpan() => MemoryMarshal.CreateSpan(ref e0, 2);
         }
 
         public partial struct __outputBuses_e__FixedBuffer
@@ -4635,15 +4731,16 @@ namespace Miniaudio
             public ma_node_output_bus e0;
             public ma_node_output_bus e1;
 
-            public ref ma_node_output_bus this[int index]
+            public unsafe ref ma_node_output_bus this[int index]
             {
                 get
                 {
-                    return ref AsSpan()[index];
+                    fixed (ma_node_output_bus* pThis = &e0)
+                    {
+                        return ref pThis[index];
+                    }
                 }
             }
-
-            public Span<ma_node_output_bus> AsSpan() => MemoryMarshal.CreateSpan(ref e0, 2);
         }
     }
 
@@ -4656,7 +4753,7 @@ namespace Miniaudio
         public uint processingSizeInFrames;
 
         [NativeTypeName("size_t")]
-        public nuint preMixStackSizeInBytes;
+        public UIntPtr preMixStackSizeInBytes;
     }
 
     public unsafe partial struct ma_node_graph
@@ -4951,6 +5048,9 @@ namespace Miniaudio
         }
     }
 
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public unsafe delegate void ma_sound_end_proc(void* pUserData, ma_sound* pSound);
+
     public unsafe partial struct ma_sound_config
     {
         [NativeTypeName("const char *")]
@@ -4998,7 +5098,7 @@ namespace Miniaudio
         public ulong loopPointEndInPCMFrames;
 
         [NativeTypeName("ma_sound_end_proc")]
-        public delegate* unmanaged[Cdecl]<void*, ma_sound*, void> endCallback;
+        public IntPtr endCallback;
 
         public void* pEndCallbackUserData;
 
@@ -5024,7 +5124,7 @@ namespace Miniaudio
         public uint atEnd;
 
         [NativeTypeName("ma_sound_end_proc")]
-        public delegate* unmanaged[Cdecl]<void*, ma_sound*, void> endCallback;
+        public IntPtr endCallback;
 
         public void* pEndCallbackUserData;
 
@@ -5043,6 +5143,9 @@ namespace Miniaudio
         public ma_sound_inlined* pPrev;
     }
 
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public unsafe delegate void ma_engine_process_proc(void* pUserData, float* pFramesOut, [NativeTypeName("ma_uint64")] ulong frameCount);
+
     public unsafe partial struct ma_engine_config
     {
         public ma_resource_manager* pResourceManager;
@@ -5054,10 +5157,10 @@ namespace Miniaudio
         public ma_device_id* pPlaybackDeviceID;
 
         [NativeTypeName("ma_device_data_proc")]
-        public delegate* unmanaged[Cdecl]<ma_device*, void*, void*, uint, void> dataCallback;
+        public IntPtr dataCallback;
 
         [NativeTypeName("ma_device_notification_proc")]
-        public delegate* unmanaged[Cdecl]<ma_device_notification*, void> notificationCallback;
+        public IntPtr notificationCallback;
 
         public ma_log* pLog;
 
@@ -5102,7 +5205,7 @@ namespace Miniaudio
         public void* pResourceManagerVFS;
 
         [NativeTypeName("ma_engine_process_proc")]
-        public delegate* unmanaged[Cdecl]<void*, float*, ulong, void> onProcess;
+        public IntPtr onProcess;
 
         public void* pProcessUserData;
     }
@@ -5151,7 +5254,7 @@ namespace Miniaudio
         public ma_mono_expansion_mode monoExpansionMode;
 
         [NativeTypeName("ma_engine_process_proc")]
-        public delegate* unmanaged[Cdecl]<void*, float*, ulong, void> onProcess;
+        public IntPtr onProcess;
 
         public void* pProcessUserData;
 
@@ -5162,15 +5265,16 @@ namespace Miniaudio
             public ma_spatializer_listener e2;
             public ma_spatializer_listener e3;
 
-            public ref ma_spatializer_listener this[int index]
+            public unsafe ref ma_spatializer_listener this[int index]
             {
                 get
                 {
-                    return ref AsSpan()[index];
+                    fixed (ma_spatializer_listener* pThis = &e0)
+                    {
+                        return ref pThis[index];
+                    }
                 }
             }
-
-            public Span<ma_spatializer_listener> AsSpan() => MemoryMarshal.CreateSpan(ref e0, 4);
         }
     }
 
@@ -5184,7 +5288,7 @@ namespace Miniaudio
         public static extern sbyte* version_string();
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_log_callback_init", ExactSpelling = true)]
-        public static extern ma_log_callback log_callback_init([NativeTypeName("ma_log_callback_proc")] delegate* unmanaged[Cdecl]<void*, uint, sbyte*, void> onLog, void* pUserData);
+        public static extern ma_log_callback log_callback_init([NativeTypeName("ma_log_callback_proc")] IntPtr onLog, void* pUserData);
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_log_init", ExactSpelling = true)]
         public static extern ma_result log_init([NativeTypeName("const ma_allocation_callbacks *")] ma_allocation_callbacks* pAllocationCallbacks, ma_log* pLog);
@@ -5211,7 +5315,7 @@ namespace Miniaudio
         public static extern ma_biquad_config biquad_config_init(ma_format format, [NativeTypeName("ma_uint32")] uint channels, double b0, double b1, double b2, double a0, double a1, double a2);
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_biquad_get_heap_size", ExactSpelling = true)]
-        public static extern ma_result biquad_get_heap_size([NativeTypeName("const ma_biquad_config *")] ma_biquad_config* pConfig, [NativeTypeName("size_t *")] nuint* pHeapSizeInBytes);
+        public static extern ma_result biquad_get_heap_size([NativeTypeName("const ma_biquad_config *")] ma_biquad_config* pConfig, [NativeTypeName("size_t *")] UIntPtr* pHeapSizeInBytes);
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_biquad_init_preallocated", ExactSpelling = true)]
         public static extern ma_result biquad_init_preallocated([NativeTypeName("const ma_biquad_config *")] ma_biquad_config* pConfig, void* pHeap, ma_biquad* pBQ);
@@ -5243,7 +5347,7 @@ namespace Miniaudio
         public static extern ma_lpf1_config lpf2_config_init(ma_format format, [NativeTypeName("ma_uint32")] uint channels, [NativeTypeName("ma_uint32")] uint sampleRate, double cutoffFrequency, double q);
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_lpf1_get_heap_size", ExactSpelling = true)]
-        public static extern ma_result lpf1_get_heap_size([NativeTypeName("const ma_lpf1_config *")] ma_lpf1_config* pConfig, [NativeTypeName("size_t *")] nuint* pHeapSizeInBytes);
+        public static extern ma_result lpf1_get_heap_size([NativeTypeName("const ma_lpf1_config *")] ma_lpf1_config* pConfig, [NativeTypeName("size_t *")] UIntPtr* pHeapSizeInBytes);
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_lpf1_init_preallocated", ExactSpelling = true)]
         public static extern ma_result lpf1_init_preallocated([NativeTypeName("const ma_lpf1_config *")] ma_lpf1_config* pConfig, void* pHeap, ma_lpf1* pLPF);
@@ -5268,7 +5372,7 @@ namespace Miniaudio
         public static extern uint lpf1_get_latency([NativeTypeName("const ma_lpf1 *")] ma_lpf1* pLPF);
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_lpf2_get_heap_size", ExactSpelling = true)]
-        public static extern ma_result lpf2_get_heap_size([NativeTypeName("const ma_lpf2_config *")] ma_lpf1_config* pConfig, [NativeTypeName("size_t *")] nuint* pHeapSizeInBytes);
+        public static extern ma_result lpf2_get_heap_size([NativeTypeName("const ma_lpf2_config *")] ma_lpf1_config* pConfig, [NativeTypeName("size_t *")] UIntPtr* pHeapSizeInBytes);
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_lpf2_init_preallocated", ExactSpelling = true)]
         public static extern ma_result lpf2_init_preallocated([NativeTypeName("const ma_lpf2_config *")] ma_lpf1_config* pConfig, void* pHeap, ma_lpf2* pHPF);
@@ -5296,7 +5400,7 @@ namespace Miniaudio
         public static extern ma_lpf_config lpf_config_init(ma_format format, [NativeTypeName("ma_uint32")] uint channels, [NativeTypeName("ma_uint32")] uint sampleRate, double cutoffFrequency, [NativeTypeName("ma_uint32")] uint order);
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_lpf_get_heap_size", ExactSpelling = true)]
-        public static extern ma_result lpf_get_heap_size([NativeTypeName("const ma_lpf_config *")] ma_lpf_config* pConfig, [NativeTypeName("size_t *")] nuint* pHeapSizeInBytes);
+        public static extern ma_result lpf_get_heap_size([NativeTypeName("const ma_lpf_config *")] ma_lpf_config* pConfig, [NativeTypeName("size_t *")] UIntPtr* pHeapSizeInBytes);
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_lpf_init_preallocated", ExactSpelling = true)]
         public static extern ma_result lpf_init_preallocated([NativeTypeName("const ma_lpf_config *")] ma_lpf_config* pConfig, void* pHeap, ma_lpf* pLPF);
@@ -5328,7 +5432,7 @@ namespace Miniaudio
         public static extern ma_hpf1_config hpf2_config_init(ma_format format, [NativeTypeName("ma_uint32")] uint channels, [NativeTypeName("ma_uint32")] uint sampleRate, double cutoffFrequency, double q);
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_hpf1_get_heap_size", ExactSpelling = true)]
-        public static extern ma_result hpf1_get_heap_size([NativeTypeName("const ma_hpf1_config *")] ma_hpf1_config* pConfig, [NativeTypeName("size_t *")] nuint* pHeapSizeInBytes);
+        public static extern ma_result hpf1_get_heap_size([NativeTypeName("const ma_hpf1_config *")] ma_hpf1_config* pConfig, [NativeTypeName("size_t *")] UIntPtr* pHeapSizeInBytes);
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_hpf1_init_preallocated", ExactSpelling = true)]
         public static extern ma_result hpf1_init_preallocated([NativeTypeName("const ma_hpf1_config *")] ma_hpf1_config* pConfig, void* pHeap, ma_hpf1* pLPF);
@@ -5350,7 +5454,7 @@ namespace Miniaudio
         public static extern uint hpf1_get_latency([NativeTypeName("const ma_hpf1 *")] ma_hpf1* pHPF);
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_hpf2_get_heap_size", ExactSpelling = true)]
-        public static extern ma_result hpf2_get_heap_size([NativeTypeName("const ma_hpf2_config *")] ma_hpf1_config* pConfig, [NativeTypeName("size_t *")] nuint* pHeapSizeInBytes);
+        public static extern ma_result hpf2_get_heap_size([NativeTypeName("const ma_hpf2_config *")] ma_hpf1_config* pConfig, [NativeTypeName("size_t *")] UIntPtr* pHeapSizeInBytes);
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_hpf2_init_preallocated", ExactSpelling = true)]
         public static extern ma_result hpf2_init_preallocated([NativeTypeName("const ma_hpf2_config *")] ma_hpf1_config* pConfig, void* pHeap, ma_hpf2* pHPF);
@@ -5375,7 +5479,7 @@ namespace Miniaudio
         public static extern ma_hpf_config hpf_config_init(ma_format format, [NativeTypeName("ma_uint32")] uint channels, [NativeTypeName("ma_uint32")] uint sampleRate, double cutoffFrequency, [NativeTypeName("ma_uint32")] uint order);
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_hpf_get_heap_size", ExactSpelling = true)]
-        public static extern ma_result hpf_get_heap_size([NativeTypeName("const ma_hpf_config *")] ma_hpf_config* pConfig, [NativeTypeName("size_t *")] nuint* pHeapSizeInBytes);
+        public static extern ma_result hpf_get_heap_size([NativeTypeName("const ma_hpf_config *")] ma_hpf_config* pConfig, [NativeTypeName("size_t *")] UIntPtr* pHeapSizeInBytes);
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_hpf_init_preallocated", ExactSpelling = true)]
         public static extern ma_result hpf_init_preallocated([NativeTypeName("const ma_hpf_config *")] ma_hpf_config* pConfig, void* pHeap, ma_hpf* pLPF);
@@ -5400,7 +5504,7 @@ namespace Miniaudio
         public static extern ma_bpf2_config bpf2_config_init(ma_format format, [NativeTypeName("ma_uint32")] uint channels, [NativeTypeName("ma_uint32")] uint sampleRate, double cutoffFrequency, double q);
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_bpf2_get_heap_size", ExactSpelling = true)]
-        public static extern ma_result bpf2_get_heap_size([NativeTypeName("const ma_bpf2_config *")] ma_bpf2_config* pConfig, [NativeTypeName("size_t *")] nuint* pHeapSizeInBytes);
+        public static extern ma_result bpf2_get_heap_size([NativeTypeName("const ma_bpf2_config *")] ma_bpf2_config* pConfig, [NativeTypeName("size_t *")] UIntPtr* pHeapSizeInBytes);
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_bpf2_init_preallocated", ExactSpelling = true)]
         public static extern ma_result bpf2_init_preallocated([NativeTypeName("const ma_bpf2_config *")] ma_bpf2_config* pConfig, void* pHeap, ma_bpf2* pBPF);
@@ -5425,7 +5529,7 @@ namespace Miniaudio
         public static extern ma_bpf_config bpf_config_init(ma_format format, [NativeTypeName("ma_uint32")] uint channels, [NativeTypeName("ma_uint32")] uint sampleRate, double cutoffFrequency, [NativeTypeName("ma_uint32")] uint order);
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_bpf_get_heap_size", ExactSpelling = true)]
-        public static extern ma_result bpf_get_heap_size([NativeTypeName("const ma_bpf_config *")] ma_bpf_config* pConfig, [NativeTypeName("size_t *")] nuint* pHeapSizeInBytes);
+        public static extern ma_result bpf_get_heap_size([NativeTypeName("const ma_bpf_config *")] ma_bpf_config* pConfig, [NativeTypeName("size_t *")] UIntPtr* pHeapSizeInBytes);
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_bpf_init_preallocated", ExactSpelling = true)]
         public static extern ma_result bpf_init_preallocated([NativeTypeName("const ma_bpf_config *")] ma_bpf_config* pConfig, void* pHeap, ma_bpf* pBPF);
@@ -5450,7 +5554,7 @@ namespace Miniaudio
         public static extern ma_notch2_config notch2_config_init(ma_format format, [NativeTypeName("ma_uint32")] uint channels, [NativeTypeName("ma_uint32")] uint sampleRate, double q, double frequency);
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_notch2_get_heap_size", ExactSpelling = true)]
-        public static extern ma_result notch2_get_heap_size([NativeTypeName("const ma_notch2_config *")] ma_notch2_config* pConfig, [NativeTypeName("size_t *")] nuint* pHeapSizeInBytes);
+        public static extern ma_result notch2_get_heap_size([NativeTypeName("const ma_notch2_config *")] ma_notch2_config* pConfig, [NativeTypeName("size_t *")] UIntPtr* pHeapSizeInBytes);
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_notch2_init_preallocated", ExactSpelling = true)]
         public static extern ma_result notch2_init_preallocated([NativeTypeName("const ma_notch2_config *")] ma_notch2_config* pConfig, void* pHeap, ma_notch2* pFilter);
@@ -5475,7 +5579,7 @@ namespace Miniaudio
         public static extern ma_peak2_config peak2_config_init(ma_format format, [NativeTypeName("ma_uint32")] uint channels, [NativeTypeName("ma_uint32")] uint sampleRate, double gainDB, double q, double frequency);
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_peak2_get_heap_size", ExactSpelling = true)]
-        public static extern ma_result peak2_get_heap_size([NativeTypeName("const ma_peak2_config *")] ma_peak2_config* pConfig, [NativeTypeName("size_t *")] nuint* pHeapSizeInBytes);
+        public static extern ma_result peak2_get_heap_size([NativeTypeName("const ma_peak2_config *")] ma_peak2_config* pConfig, [NativeTypeName("size_t *")] UIntPtr* pHeapSizeInBytes);
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_peak2_init_preallocated", ExactSpelling = true)]
         public static extern ma_result peak2_init_preallocated([NativeTypeName("const ma_peak2_config *")] ma_peak2_config* pConfig, void* pHeap, ma_peak2* pFilter);
@@ -5500,7 +5604,7 @@ namespace Miniaudio
         public static extern ma_loshelf2_config loshelf2_config_init(ma_format format, [NativeTypeName("ma_uint32")] uint channels, [NativeTypeName("ma_uint32")] uint sampleRate, double gainDB, double shelfSlope, double frequency);
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_loshelf2_get_heap_size", ExactSpelling = true)]
-        public static extern ma_result loshelf2_get_heap_size([NativeTypeName("const ma_loshelf2_config *")] ma_loshelf2_config* pConfig, [NativeTypeName("size_t *")] nuint* pHeapSizeInBytes);
+        public static extern ma_result loshelf2_get_heap_size([NativeTypeName("const ma_loshelf2_config *")] ma_loshelf2_config* pConfig, [NativeTypeName("size_t *")] UIntPtr* pHeapSizeInBytes);
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_loshelf2_init_preallocated", ExactSpelling = true)]
         public static extern ma_result loshelf2_init_preallocated([NativeTypeName("const ma_loshelf2_config *")] ma_loshelf2_config* pConfig, void* pHeap, ma_loshelf2* pFilter);
@@ -5525,7 +5629,7 @@ namespace Miniaudio
         public static extern ma_hishelf2_config hishelf2_config_init(ma_format format, [NativeTypeName("ma_uint32")] uint channels, [NativeTypeName("ma_uint32")] uint sampleRate, double gainDB, double shelfSlope, double frequency);
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_hishelf2_get_heap_size", ExactSpelling = true)]
-        public static extern ma_result hishelf2_get_heap_size([NativeTypeName("const ma_hishelf2_config *")] ma_hishelf2_config* pConfig, [NativeTypeName("size_t *")] nuint* pHeapSizeInBytes);
+        public static extern ma_result hishelf2_get_heap_size([NativeTypeName("const ma_hishelf2_config *")] ma_hishelf2_config* pConfig, [NativeTypeName("size_t *")] UIntPtr* pHeapSizeInBytes);
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_hishelf2_init_preallocated", ExactSpelling = true)]
         public static extern ma_result hishelf2_init_preallocated([NativeTypeName("const ma_hishelf2_config *")] ma_hishelf2_config* pConfig, void* pHeap, ma_hishelf2* pFilter);
@@ -5580,7 +5684,7 @@ namespace Miniaudio
         public static extern ma_gainer_config gainer_config_init([NativeTypeName("ma_uint32")] uint channels, [NativeTypeName("ma_uint32")] uint smoothTimeInFrames);
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_gainer_get_heap_size", ExactSpelling = true)]
-        public static extern ma_result gainer_get_heap_size([NativeTypeName("const ma_gainer_config *")] ma_gainer_config* pConfig, [NativeTypeName("size_t *")] nuint* pHeapSizeInBytes);
+        public static extern ma_result gainer_get_heap_size([NativeTypeName("const ma_gainer_config *")] ma_gainer_config* pConfig, [NativeTypeName("size_t *")] UIntPtr* pHeapSizeInBytes);
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_gainer_init_preallocated", ExactSpelling = true)]
         public static extern ma_result gainer_init_preallocated([NativeTypeName("const ma_gainer_config *")] ma_gainer_config* pConfig, void* pHeap, ma_gainer* pGainer);
@@ -5652,7 +5756,7 @@ namespace Miniaudio
         public static extern ma_spatializer_listener_config spatializer_listener_config_init([NativeTypeName("ma_uint32")] uint channelsOut);
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_spatializer_listener_get_heap_size", ExactSpelling = true)]
-        public static extern ma_result spatializer_listener_get_heap_size([NativeTypeName("const ma_spatializer_listener_config *")] ma_spatializer_listener_config* pConfig, [NativeTypeName("size_t *")] nuint* pHeapSizeInBytes);
+        public static extern ma_result spatializer_listener_get_heap_size([NativeTypeName("const ma_spatializer_listener_config *")] ma_spatializer_listener_config* pConfig, [NativeTypeName("size_t *")] UIntPtr* pHeapSizeInBytes);
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_spatializer_listener_init_preallocated", ExactSpelling = true)]
         public static extern ma_result spatializer_listener_init_preallocated([NativeTypeName("const ma_spatializer_listener_config *")] ma_spatializer_listener_config* pConfig, void* pHeap, ma_spatializer_listener* pListener);
@@ -5714,7 +5818,7 @@ namespace Miniaudio
         public static extern ma_spatializer_config spatializer_config_init([NativeTypeName("ma_uint32")] uint channelsIn, [NativeTypeName("ma_uint32")] uint channelsOut);
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_spatializer_get_heap_size", ExactSpelling = true)]
-        public static extern ma_result spatializer_get_heap_size([NativeTypeName("const ma_spatializer_config *")] ma_spatializer_config* pConfig, [NativeTypeName("size_t *")] nuint* pHeapSizeInBytes);
+        public static extern ma_result spatializer_get_heap_size([NativeTypeName("const ma_spatializer_config *")] ma_spatializer_config* pConfig, [NativeTypeName("size_t *")] UIntPtr* pHeapSizeInBytes);
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_spatializer_init_preallocated", ExactSpelling = true)]
         public static extern ma_result spatializer_init_preallocated([NativeTypeName("const ma_spatializer_config *")] ma_spatializer_config* pConfig, void* pHeap, ma_spatializer* pSpatializer);
@@ -5827,7 +5931,7 @@ namespace Miniaudio
         public static extern ma_linear_resampler_config linear_resampler_config_init(ma_format format, [NativeTypeName("ma_uint32")] uint channels, [NativeTypeName("ma_uint32")] uint sampleRateIn, [NativeTypeName("ma_uint32")] uint sampleRateOut);
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_linear_resampler_get_heap_size", ExactSpelling = true)]
-        public static extern ma_result linear_resampler_get_heap_size([NativeTypeName("const ma_linear_resampler_config *")] ma_linear_resampler_config* pConfig, [NativeTypeName("size_t *")] nuint* pHeapSizeInBytes);
+        public static extern ma_result linear_resampler_get_heap_size([NativeTypeName("const ma_linear_resampler_config *")] ma_linear_resampler_config* pConfig, [NativeTypeName("size_t *")] UIntPtr* pHeapSizeInBytes);
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_linear_resampler_init_preallocated", ExactSpelling = true)]
         public static extern ma_result linear_resampler_init_preallocated([NativeTypeName("const ma_linear_resampler_config *")] ma_linear_resampler_config* pConfig, void* pHeap, ma_linear_resampler* pResampler);
@@ -5868,7 +5972,7 @@ namespace Miniaudio
         public static extern ma_resampler_config resampler_config_init(ma_format format, [NativeTypeName("ma_uint32")] uint channels, [NativeTypeName("ma_uint32")] uint sampleRateIn, [NativeTypeName("ma_uint32")] uint sampleRateOut, ma_resample_algorithm algorithm);
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_resampler_get_heap_size", ExactSpelling = true)]
-        public static extern ma_result resampler_get_heap_size([NativeTypeName("const ma_resampler_config *")] ma_resampler_config* pConfig, [NativeTypeName("size_t *")] nuint* pHeapSizeInBytes);
+        public static extern ma_result resampler_get_heap_size([NativeTypeName("const ma_resampler_config *")] ma_resampler_config* pConfig, [NativeTypeName("size_t *")] UIntPtr* pHeapSizeInBytes);
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_resampler_init_preallocated", ExactSpelling = true)]
         public static extern ma_result resampler_init_preallocated([NativeTypeName("const ma_resampler_config *")] ma_resampler_config* pConfig, void* pHeap, ma_resampler* pResampler);
@@ -5909,7 +6013,7 @@ namespace Miniaudio
         public static extern ma_channel_converter_config channel_converter_config_init(ma_format format, [NativeTypeName("ma_uint32")] uint channelsIn, [NativeTypeName("const ma_channel *")] byte* pChannelMapIn, [NativeTypeName("ma_uint32")] uint channelsOut, [NativeTypeName("const ma_channel *")] byte* pChannelMapOut, ma_channel_mix_mode mixingMode);
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_channel_converter_get_heap_size", ExactSpelling = true)]
-        public static extern ma_result channel_converter_get_heap_size([NativeTypeName("const ma_channel_converter_config *")] ma_channel_converter_config* pConfig, [NativeTypeName("size_t *")] nuint* pHeapSizeInBytes);
+        public static extern ma_result channel_converter_get_heap_size([NativeTypeName("const ma_channel_converter_config *")] ma_channel_converter_config* pConfig, [NativeTypeName("size_t *")] UIntPtr* pHeapSizeInBytes);
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_channel_converter_init_preallocated", ExactSpelling = true)]
         public static extern ma_result channel_converter_init_preallocated([NativeTypeName("const ma_channel_converter_config *")] ma_channel_converter_config* pConfig, void* pHeap, ma_channel_converter* pConverter);
@@ -5924,10 +6028,10 @@ namespace Miniaudio
         public static extern ma_result channel_converter_process_pcm_frames(ma_channel_converter* pConverter, void* pFramesOut, [NativeTypeName("const void *")] void* pFramesIn, [NativeTypeName("ma_uint64")] ulong frameCount);
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_channel_converter_get_input_channel_map", ExactSpelling = true)]
-        public static extern ma_result channel_converter_get_input_channel_map([NativeTypeName("const ma_channel_converter *")] ma_channel_converter* pConverter, [NativeTypeName("ma_channel *")] byte* pChannelMap, [NativeTypeName("size_t")] nuint channelMapCap);
+        public static extern ma_result channel_converter_get_input_channel_map([NativeTypeName("const ma_channel_converter *")] ma_channel_converter* pConverter, [NativeTypeName("ma_channel *")] byte* pChannelMap, [NativeTypeName("size_t")] UIntPtr channelMapCap);
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_channel_converter_get_output_channel_map", ExactSpelling = true)]
-        public static extern ma_result channel_converter_get_output_channel_map([NativeTypeName("const ma_channel_converter *")] ma_channel_converter* pConverter, [NativeTypeName("ma_channel *")] byte* pChannelMap, [NativeTypeName("size_t")] nuint channelMapCap);
+        public static extern ma_result channel_converter_get_output_channel_map([NativeTypeName("const ma_channel_converter *")] ma_channel_converter* pConverter, [NativeTypeName("ma_channel *")] byte* pChannelMap, [NativeTypeName("size_t")] UIntPtr channelMapCap);
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_data_converter_config_init_default", ExactSpelling = true)]
         public static extern ma_data_converter_config data_converter_config_init_default();
@@ -5936,7 +6040,7 @@ namespace Miniaudio
         public static extern ma_data_converter_config data_converter_config_init(ma_format formatIn, ma_format formatOut, [NativeTypeName("ma_uint32")] uint channelsIn, [NativeTypeName("ma_uint32")] uint channelsOut, [NativeTypeName("ma_uint32")] uint sampleRateIn, [NativeTypeName("ma_uint32")] uint sampleRateOut);
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_data_converter_get_heap_size", ExactSpelling = true)]
-        public static extern ma_result data_converter_get_heap_size([NativeTypeName("const ma_data_converter_config *")] ma_data_converter_config* pConfig, [NativeTypeName("size_t *")] nuint* pHeapSizeInBytes);
+        public static extern ma_result data_converter_get_heap_size([NativeTypeName("const ma_data_converter_config *")] ma_data_converter_config* pConfig, [NativeTypeName("size_t *")] UIntPtr* pHeapSizeInBytes);
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_data_converter_init_preallocated", ExactSpelling = true)]
         public static extern ma_result data_converter_init_preallocated([NativeTypeName("const ma_data_converter_config *")] ma_data_converter_config* pConfig, void* pHeap, ma_data_converter* pConverter);
@@ -5971,10 +6075,10 @@ namespace Miniaudio
         public static extern ma_result data_converter_get_expected_output_frame_count([NativeTypeName("const ma_data_converter *")] ma_data_converter* pConverter, [NativeTypeName("ma_uint64")] ulong inputFrameCount, [NativeTypeName("ma_uint64 *")] ulong* pOutputFrameCount);
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_data_converter_get_input_channel_map", ExactSpelling = true)]
-        public static extern ma_result data_converter_get_input_channel_map([NativeTypeName("const ma_data_converter *")] ma_data_converter* pConverter, [NativeTypeName("ma_channel *")] byte* pChannelMap, [NativeTypeName("size_t")] nuint channelMapCap);
+        public static extern ma_result data_converter_get_input_channel_map([NativeTypeName("const ma_data_converter *")] ma_data_converter* pConverter, [NativeTypeName("ma_channel *")] byte* pChannelMap, [NativeTypeName("size_t")] UIntPtr channelMapCap);
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_data_converter_get_output_channel_map", ExactSpelling = true)]
-        public static extern ma_result data_converter_get_output_channel_map([NativeTypeName("const ma_data_converter *")] ma_data_converter* pConverter, [NativeTypeName("ma_channel *")] byte* pChannelMap, [NativeTypeName("size_t")] nuint channelMapCap);
+        public static extern ma_result data_converter_get_output_channel_map([NativeTypeName("const ma_data_converter *")] ma_data_converter* pConverter, [NativeTypeName("ma_channel *")] byte* pChannelMap, [NativeTypeName("size_t")] UIntPtr channelMapCap);
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_data_converter_reset", ExactSpelling = true)]
         public static extern ma_result data_converter_reset(ma_data_converter* pConverter);
@@ -6059,13 +6163,13 @@ namespace Miniaudio
         public static extern void channel_map_init_blank([NativeTypeName("ma_channel *")] byte* pChannelMap, [NativeTypeName("ma_uint32")] uint channels);
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_channel_map_init_standard", ExactSpelling = true)]
-        public static extern void channel_map_init_standard(ma_standard_channel_map standardChannelMap, [NativeTypeName("ma_channel *")] byte* pChannelMap, [NativeTypeName("size_t")] nuint channelMapCap, [NativeTypeName("ma_uint32")] uint channels);
+        public static extern void channel_map_init_standard(ma_standard_channel_map standardChannelMap, [NativeTypeName("ma_channel *")] byte* pChannelMap, [NativeTypeName("size_t")] UIntPtr channelMapCap, [NativeTypeName("ma_uint32")] uint channels);
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_channel_map_copy", ExactSpelling = true)]
         public static extern void channel_map_copy([NativeTypeName("ma_channel *")] byte* pOut, [NativeTypeName("const ma_channel *")] byte* pIn, [NativeTypeName("ma_uint32")] uint channels);
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_channel_map_copy_or_default", ExactSpelling = true)]
-        public static extern void channel_map_copy_or_default([NativeTypeName("ma_channel *")] byte* pOut, [NativeTypeName("size_t")] nuint channelMapCapOut, [NativeTypeName("const ma_channel *")] byte* pIn, [NativeTypeName("ma_uint32")] uint channels);
+        public static extern void channel_map_copy_or_default([NativeTypeName("ma_channel *")] byte* pOut, [NativeTypeName("size_t")] UIntPtr channelMapCapOut, [NativeTypeName("const ma_channel *")] byte* pIn, [NativeTypeName("ma_uint32")] uint channels);
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_channel_map_is_valid", ExactSpelling = true)]
         [return: NativeTypeName("ma_bool32")]
@@ -6089,7 +6193,7 @@ namespace Miniaudio
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_channel_map_to_string", ExactSpelling = true)]
         [return: NativeTypeName("size_t")]
-        public static extern nuint channel_map_to_string([NativeTypeName("const ma_channel *")] byte* pChannelMap, [NativeTypeName("ma_uint32")] uint channels, [NativeTypeName("char *")] sbyte* pBufferOut, [NativeTypeName("size_t")] nuint bufferCap);
+        public static extern UIntPtr channel_map_to_string([NativeTypeName("const ma_channel *")] byte* pChannelMap, [NativeTypeName("ma_uint32")] uint channels, [NativeTypeName("char *")] sbyte* pBufferOut, [NativeTypeName("size_t")] UIntPtr bufferCap);
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_channel_position_to_string", ExactSpelling = true)]
         [return: NativeTypeName("const char *")]
@@ -6128,7 +6232,7 @@ namespace Miniaudio
         public static extern ma_result data_source_seek_to_second([NativeTypeName("ma_data_source *")] void* pDataSource, float seekPointInSeconds);
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_data_source_get_data_format", ExactSpelling = true)]
-        public static extern ma_result data_source_get_data_format([NativeTypeName("ma_data_source *")] void* pDataSource, ma_format* pFormat, [NativeTypeName("ma_uint32 *")] uint* pChannels, [NativeTypeName("ma_uint32 *")] uint* pSampleRate, [NativeTypeName("ma_channel *")] byte* pChannelMap, [NativeTypeName("size_t")] nuint channelMapCap);
+        public static extern ma_result data_source_get_data_format([NativeTypeName("ma_data_source *")] void* pDataSource, ma_format* pFormat, [NativeTypeName("ma_uint32 *")] uint* pChannels, [NativeTypeName("ma_uint32 *")] uint* pSampleRate, [NativeTypeName("ma_channel *")] byte* pChannelMap, [NativeTypeName("size_t")] UIntPtr channelMapCap);
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_data_source_get_cursor_in_pcm_frames", ExactSpelling = true)]
         public static extern ma_result data_source_get_cursor_in_pcm_frames([NativeTypeName("ma_data_source *")] void* pDataSource, [NativeTypeName("ma_uint64 *")] ulong* pCursor);
@@ -6176,11 +6280,11 @@ namespace Miniaudio
         public static extern void* data_source_get_next([NativeTypeName("const ma_data_source *")] void* pDataSource);
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_data_source_set_next_callback", ExactSpelling = true)]
-        public static extern ma_result data_source_set_next_callback([NativeTypeName("ma_data_source *")] void* pDataSource, [NativeTypeName("ma_data_source_get_next_proc")] delegate* unmanaged[Cdecl]<void*, void*> onGetNext);
+        public static extern ma_result data_source_set_next_callback([NativeTypeName("ma_data_source *")] void* pDataSource, [NativeTypeName("ma_data_source_get_next_proc")] IntPtr onGetNext);
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_data_source_get_next_callback", ExactSpelling = true)]
         [return: NativeTypeName("ma_data_source_get_next_proc")]
-        public static extern delegate* unmanaged[Cdecl]<void*, void*> data_source_get_next_callback([NativeTypeName("const ma_data_source *")] void* pDataSource);
+        public static extern IntPtr data_source_get_next_callback([NativeTypeName("const ma_data_source *")] void* pDataSource);
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_audio_buffer_ref_init", ExactSpelling = true)]
         public static extern ma_result audio_buffer_ref_init(ma_format format, [NativeTypeName("ma_uint32")] uint channels, [NativeTypeName("const void *")] void* pData, [NativeTypeName("ma_uint64")] ulong sizeInFrames, ma_audio_buffer_ref* pAudioBufferRef);
@@ -6310,10 +6414,10 @@ namespace Miniaudio
         public static extern ma_result paged_audio_buffer_get_length_in_pcm_frames(ma_paged_audio_buffer* pPagedAudioBuffer, [NativeTypeName("ma_uint64 *")] ulong* pLength);
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_rb_init_ex", ExactSpelling = true)]
-        public static extern ma_result rb_init_ex([NativeTypeName("size_t")] nuint subbufferSizeInBytes, [NativeTypeName("size_t")] nuint subbufferCount, [NativeTypeName("size_t")] nuint subbufferStrideInBytes, void* pOptionalPreallocatedBuffer, [NativeTypeName("const ma_allocation_callbacks *")] ma_allocation_callbacks* pAllocationCallbacks, ma_rb* pRB);
+        public static extern ma_result rb_init_ex([NativeTypeName("size_t")] UIntPtr subbufferSizeInBytes, [NativeTypeName("size_t")] UIntPtr subbufferCount, [NativeTypeName("size_t")] UIntPtr subbufferStrideInBytes, void* pOptionalPreallocatedBuffer, [NativeTypeName("const ma_allocation_callbacks *")] ma_allocation_callbacks* pAllocationCallbacks, ma_rb* pRB);
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_rb_init", ExactSpelling = true)]
-        public static extern ma_result rb_init([NativeTypeName("size_t")] nuint bufferSizeInBytes, void* pOptionalPreallocatedBuffer, [NativeTypeName("const ma_allocation_callbacks *")] ma_allocation_callbacks* pAllocationCallbacks, ma_rb* pRB);
+        public static extern ma_result rb_init([NativeTypeName("size_t")] UIntPtr bufferSizeInBytes, void* pOptionalPreallocatedBuffer, [NativeTypeName("const ma_allocation_callbacks *")] ma_allocation_callbacks* pAllocationCallbacks, ma_rb* pRB);
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_rb_uninit", ExactSpelling = true)]
         public static extern void rb_uninit(ma_rb* pRB);
@@ -6322,22 +6426,22 @@ namespace Miniaudio
         public static extern void rb_reset(ma_rb* pRB);
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_rb_acquire_read", ExactSpelling = true)]
-        public static extern ma_result rb_acquire_read(ma_rb* pRB, [NativeTypeName("size_t *")] nuint* pSizeInBytes, void** ppBufferOut);
+        public static extern ma_result rb_acquire_read(ma_rb* pRB, [NativeTypeName("size_t *")] UIntPtr* pSizeInBytes, void** ppBufferOut);
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_rb_commit_read", ExactSpelling = true)]
-        public static extern ma_result rb_commit_read(ma_rb* pRB, [NativeTypeName("size_t")] nuint sizeInBytes);
+        public static extern ma_result rb_commit_read(ma_rb* pRB, [NativeTypeName("size_t")] UIntPtr sizeInBytes);
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_rb_acquire_write", ExactSpelling = true)]
-        public static extern ma_result rb_acquire_write(ma_rb* pRB, [NativeTypeName("size_t *")] nuint* pSizeInBytes, void** ppBufferOut);
+        public static extern ma_result rb_acquire_write(ma_rb* pRB, [NativeTypeName("size_t *")] UIntPtr* pSizeInBytes, void** ppBufferOut);
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_rb_commit_write", ExactSpelling = true)]
-        public static extern ma_result rb_commit_write(ma_rb* pRB, [NativeTypeName("size_t")] nuint sizeInBytes);
+        public static extern ma_result rb_commit_write(ma_rb* pRB, [NativeTypeName("size_t")] UIntPtr sizeInBytes);
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_rb_seek_read", ExactSpelling = true)]
-        public static extern ma_result rb_seek_read(ma_rb* pRB, [NativeTypeName("size_t")] nuint offsetInBytes);
+        public static extern ma_result rb_seek_read(ma_rb* pRB, [NativeTypeName("size_t")] UIntPtr offsetInBytes);
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_rb_seek_write", ExactSpelling = true)]
-        public static extern ma_result rb_seek_write(ma_rb* pRB, [NativeTypeName("size_t")] nuint offsetInBytes);
+        public static extern ma_result rb_seek_write(ma_rb* pRB, [NativeTypeName("size_t")] UIntPtr offsetInBytes);
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_rb_pointer_distance", ExactSpelling = true)]
         [return: NativeTypeName("ma_int32")]
@@ -6353,18 +6457,18 @@ namespace Miniaudio
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_rb_get_subbuffer_size", ExactSpelling = true)]
         [return: NativeTypeName("size_t")]
-        public static extern nuint rb_get_subbuffer_size(ma_rb* pRB);
+        public static extern UIntPtr rb_get_subbuffer_size(ma_rb* pRB);
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_rb_get_subbuffer_stride", ExactSpelling = true)]
         [return: NativeTypeName("size_t")]
-        public static extern nuint rb_get_subbuffer_stride(ma_rb* pRB);
+        public static extern UIntPtr rb_get_subbuffer_stride(ma_rb* pRB);
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_rb_get_subbuffer_offset", ExactSpelling = true)]
         [return: NativeTypeName("size_t")]
-        public static extern nuint rb_get_subbuffer_offset(ma_rb* pRB, [NativeTypeName("size_t")] nuint subbufferIndex);
+        public static extern UIntPtr rb_get_subbuffer_offset(ma_rb* pRB, [NativeTypeName("size_t")] UIntPtr subbufferIndex);
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_rb_get_subbuffer_ptr", ExactSpelling = true)]
-        public static extern void* rb_get_subbuffer_ptr(ma_rb* pRB, [NativeTypeName("size_t")] nuint subbufferIndex, void* pBuffer);
+        public static extern void* rb_get_subbuffer_ptr(ma_rb* pRB, [NativeTypeName("size_t")] UIntPtr subbufferIndex, void* pBuffer);
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_pcm_rb_init_ex", ExactSpelling = true)]
         public static extern ma_result pcm_rb_init_ex(ma_format format, [NativeTypeName("ma_uint32")] uint channels, [NativeTypeName("ma_uint32")] uint subbufferSizeInFrames, [NativeTypeName("ma_uint32")] uint subbufferCount, [NativeTypeName("ma_uint32")] uint subbufferStrideInFrames, void* pOptionalPreallocatedBuffer, [NativeTypeName("const ma_allocation_callbacks *")] ma_allocation_callbacks* pAllocationCallbacks, ma_pcm_rb* pRB);
@@ -6448,19 +6552,19 @@ namespace Miniaudio
         public static extern sbyte* result_description(ma_result result);
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_malloc", ExactSpelling = true)]
-        public static extern void* malloc([NativeTypeName("size_t")] nuint sz, [NativeTypeName("const ma_allocation_callbacks *")] ma_allocation_callbacks* pAllocationCallbacks);
+        public static extern void* malloc([NativeTypeName("size_t")] UIntPtr sz, [NativeTypeName("const ma_allocation_callbacks *")] ma_allocation_callbacks* pAllocationCallbacks);
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_calloc", ExactSpelling = true)]
-        public static extern void* calloc([NativeTypeName("size_t")] nuint sz, [NativeTypeName("const ma_allocation_callbacks *")] ma_allocation_callbacks* pAllocationCallbacks);
+        public static extern void* calloc([NativeTypeName("size_t")] UIntPtr sz, [NativeTypeName("const ma_allocation_callbacks *")] ma_allocation_callbacks* pAllocationCallbacks);
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_realloc", ExactSpelling = true)]
-        public static extern void* realloc(void* p, [NativeTypeName("size_t")] nuint sz, [NativeTypeName("const ma_allocation_callbacks *")] ma_allocation_callbacks* pAllocationCallbacks);
+        public static extern void* realloc(void* p, [NativeTypeName("size_t")] UIntPtr sz, [NativeTypeName("const ma_allocation_callbacks *")] ma_allocation_callbacks* pAllocationCallbacks);
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_free", ExactSpelling = true)]
         public static extern void free(void* p, [NativeTypeName("const ma_allocation_callbacks *")] ma_allocation_callbacks* pAllocationCallbacks);
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_aligned_malloc", ExactSpelling = true)]
-        public static extern void* aligned_malloc([NativeTypeName("size_t")] nuint sz, [NativeTypeName("size_t")] nuint alignment, [NativeTypeName("const ma_allocation_callbacks *")] ma_allocation_callbacks* pAllocationCallbacks);
+        public static extern void* aligned_malloc([NativeTypeName("size_t")] UIntPtr sz, [NativeTypeName("size_t")] UIntPtr alignment, [NativeTypeName("const ma_allocation_callbacks *")] ma_allocation_callbacks* pAllocationCallbacks);
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_aligned_free", ExactSpelling = true)]
         public static extern void aligned_free(void* p, [NativeTypeName("const ma_allocation_callbacks *")] ma_allocation_callbacks* pAllocationCallbacks);
@@ -6572,7 +6676,7 @@ namespace Miniaudio
         public static extern ma_slot_allocator_config slot_allocator_config_init([NativeTypeName("ma_uint32")] uint capacity);
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_slot_allocator_get_heap_size", ExactSpelling = true)]
-        public static extern ma_result slot_allocator_get_heap_size([NativeTypeName("const ma_slot_allocator_config *")] ma_slot_allocator_config* pConfig, [NativeTypeName("size_t *")] nuint* pHeapSizeInBytes);
+        public static extern ma_result slot_allocator_get_heap_size([NativeTypeName("const ma_slot_allocator_config *")] ma_slot_allocator_config* pConfig, [NativeTypeName("size_t *")] UIntPtr* pHeapSizeInBytes);
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_slot_allocator_init_preallocated", ExactSpelling = true)]
         public static extern ma_result slot_allocator_init_preallocated([NativeTypeName("const ma_slot_allocator_config *")] ma_slot_allocator_config* pConfig, void* pHeap, ma_slot_allocator* pAllocator);
@@ -6599,7 +6703,7 @@ namespace Miniaudio
         public static extern ma_job_queue_config job_queue_config_init([NativeTypeName("ma_uint32")] uint flags, [NativeTypeName("ma_uint32")] uint capacity);
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_job_queue_get_heap_size", ExactSpelling = true)]
-        public static extern ma_result job_queue_get_heap_size([NativeTypeName("const ma_job_queue_config *")] ma_job_queue_config* pConfig, [NativeTypeName("size_t *")] nuint* pHeapSizeInBytes);
+        public static extern ma_result job_queue_get_heap_size([NativeTypeName("const ma_job_queue_config *")] ma_job_queue_config* pConfig, [NativeTypeName("size_t *")] UIntPtr* pHeapSizeInBytes);
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_job_queue_init_preallocated", ExactSpelling = true)]
         public static extern ma_result job_queue_init_preallocated([NativeTypeName("const ma_job_queue_config *")] ma_job_queue_config* pConfig, void* pHeap, ma_job_queue* pQueue);
@@ -6646,13 +6750,13 @@ namespace Miniaudio
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_context_sizeof", ExactSpelling = true)]
         [return: NativeTypeName("size_t")]
-        public static extern nuint context_sizeof();
+        public static extern UIntPtr context_sizeof();
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_context_get_log", ExactSpelling = true)]
         public static extern ma_log* context_get_log(ma_context* pContext);
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_context_enumerate_devices", ExactSpelling = true)]
-        public static extern ma_result context_enumerate_devices(ma_context* pContext, [NativeTypeName("ma_enum_devices_callback_proc")] delegate* unmanaged[Cdecl]<ma_context*, ma_device_type, ma_device_info*, void*, uint> callback, void* pUserData);
+        public static extern ma_result context_enumerate_devices(ma_context* pContext, [NativeTypeName("ma_enum_devices_callback_proc")] IntPtr callback, void* pUserData);
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_context_get_devices", ExactSpelling = true)]
         public static extern ma_result context_get_devices(ma_context* pContext, ma_device_info** ppPlaybackDeviceInfos, [NativeTypeName("ma_uint32 *")] uint* pPlaybackDeviceCount, ma_device_info** ppCaptureDeviceInfos, [NativeTypeName("ma_uint32 *")] uint* pCaptureDeviceCount);
@@ -6686,7 +6790,7 @@ namespace Miniaudio
         public static extern ma_result device_get_info(ma_device* pDevice, ma_device_type type, ma_device_info* pDeviceInfo);
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_device_get_name", ExactSpelling = true)]
-        public static extern ma_result device_get_name(ma_device* pDevice, ma_device_type type, [NativeTypeName("char *")] sbyte* pName, [NativeTypeName("size_t")] nuint nameCap, [NativeTypeName("size_t *")] nuint* pLengthNotIncludingNullTerminator);
+        public static extern ma_result device_get_name(ma_device* pDevice, ma_device_type type, [NativeTypeName("char *")] sbyte* pName, [NativeTypeName("size_t")] UIntPtr nameCap, [NativeTypeName("size_t *")] UIntPtr* pLengthNotIncludingNullTerminator);
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_device_start", ExactSpelling = true)]
         public static extern ma_result device_start(ma_device* pDevice);
@@ -6735,7 +6839,7 @@ namespace Miniaudio
         public static extern uint is_backend_enabled(ma_backend backend);
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_get_enabled_backends", ExactSpelling = true)]
-        public static extern ma_result get_enabled_backends(ma_backend* pBackends, [NativeTypeName("size_t")] nuint backendCap, [NativeTypeName("size_t *")] nuint* pBackendCount);
+        public static extern ma_result get_enabled_backends(ma_backend* pBackends, [NativeTypeName("size_t")] UIntPtr backendCap, [NativeTypeName("size_t *")] UIntPtr* pBackendCount);
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_is_loopback_supported", ExactSpelling = true)]
         [return: NativeTypeName("ma_bool32")]
@@ -6897,10 +7001,10 @@ namespace Miniaudio
         public static extern ma_result vfs_close([NativeTypeName("ma_vfs *")] void* pVFS, [NativeTypeName("ma_vfs_file")] void* file);
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_vfs_read", ExactSpelling = true)]
-        public static extern ma_result vfs_read([NativeTypeName("ma_vfs *")] void* pVFS, [NativeTypeName("ma_vfs_file")] void* file, void* pDst, [NativeTypeName("size_t")] nuint sizeInBytes, [NativeTypeName("size_t *")] nuint* pBytesRead);
+        public static extern ma_result vfs_read([NativeTypeName("ma_vfs *")] void* pVFS, [NativeTypeName("ma_vfs_file")] void* file, void* pDst, [NativeTypeName("size_t")] UIntPtr sizeInBytes, [NativeTypeName("size_t *")] UIntPtr* pBytesRead);
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_vfs_write", ExactSpelling = true)]
-        public static extern ma_result vfs_write([NativeTypeName("ma_vfs *")] void* pVFS, [NativeTypeName("ma_vfs_file")] void* file, [NativeTypeName("const void *")] void* pSrc, [NativeTypeName("size_t")] nuint sizeInBytes, [NativeTypeName("size_t *")] nuint* pBytesWritten);
+        public static extern ma_result vfs_write([NativeTypeName("ma_vfs *")] void* pVFS, [NativeTypeName("ma_vfs_file")] void* file, [NativeTypeName("const void *")] void* pSrc, [NativeTypeName("size_t")] UIntPtr sizeInBytes, [NativeTypeName("size_t *")] UIntPtr* pBytesWritten);
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_vfs_seek", ExactSpelling = true)]
         public static extern ma_result vfs_seek([NativeTypeName("ma_vfs *")] void* pVFS, [NativeTypeName("ma_vfs_file")] void* file, [NativeTypeName("ma_int64")] long offset, ma_seek_origin origin);
@@ -6912,7 +7016,7 @@ namespace Miniaudio
         public static extern ma_result vfs_info([NativeTypeName("ma_vfs *")] void* pVFS, [NativeTypeName("ma_vfs_file")] void* file, ma_file_info* pInfo);
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_vfs_open_and_read_file", ExactSpelling = true)]
-        public static extern ma_result vfs_open_and_read_file([NativeTypeName("ma_vfs *")] void* pVFS, [NativeTypeName("const char *")] sbyte* pFilePath, void** ppData, [NativeTypeName("size_t *")] nuint* pSize, [NativeTypeName("const ma_allocation_callbacks *")] ma_allocation_callbacks* pAllocationCallbacks);
+        public static extern ma_result vfs_open_and_read_file([NativeTypeName("ma_vfs *")] void* pVFS, [NativeTypeName("const char *")] sbyte* pFilePath, void** ppData, [NativeTypeName("size_t *")] UIntPtr* pSize, [NativeTypeName("const ma_allocation_callbacks *")] ma_allocation_callbacks* pAllocationCallbacks);
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_default_vfs_init", ExactSpelling = true)]
         public static extern ma_result default_vfs_init(ma_default_vfs* pVFS, [NativeTypeName("const ma_allocation_callbacks *")] ma_allocation_callbacks* pAllocationCallbacks);
@@ -6927,10 +7031,10 @@ namespace Miniaudio
         public static extern ma_decoder_config decoder_config_init_default();
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_decoder_init", ExactSpelling = true)]
-        public static extern ma_result decoder_init([NativeTypeName("ma_decoder_read_proc")] delegate* unmanaged[Cdecl]<ma_decoder*, void*, nuint, nuint*, ma_result> onRead, [NativeTypeName("ma_decoder_seek_proc")] delegate* unmanaged[Cdecl]<ma_decoder*, long, ma_seek_origin, ma_result> onSeek, void* pUserData, [NativeTypeName("const ma_decoder_config *")] ma_decoder_config* pConfig, ma_decoder* pDecoder);
+        public static extern ma_result decoder_init([NativeTypeName("ma_decoder_read_proc")] IntPtr onRead, [NativeTypeName("ma_decoder_seek_proc")] IntPtr onSeek, void* pUserData, [NativeTypeName("const ma_decoder_config *")] ma_decoder_config* pConfig, ma_decoder* pDecoder);
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_decoder_init_memory", ExactSpelling = true)]
-        public static extern ma_result decoder_init_memory([NativeTypeName("const void *")] void* pData, [NativeTypeName("size_t")] nuint dataSize, [NativeTypeName("const ma_decoder_config *")] ma_decoder_config* pConfig, ma_decoder* pDecoder);
+        public static extern ma_result decoder_init_memory([NativeTypeName("const void *")] void* pData, [NativeTypeName("size_t")] UIntPtr dataSize, [NativeTypeName("const ma_decoder_config *")] ma_decoder_config* pConfig, ma_decoder* pDecoder);
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_decoder_init_vfs", ExactSpelling = true)]
         public static extern ma_result decoder_init_vfs([NativeTypeName("ma_vfs *")] void* pVFS, [NativeTypeName("const char *")] sbyte* pFilePath, [NativeTypeName("const ma_decoder_config *")] ma_decoder_config* pConfig, ma_decoder* pDecoder);
@@ -6954,7 +7058,7 @@ namespace Miniaudio
         public static extern ma_result decoder_seek_to_pcm_frame(ma_decoder* pDecoder, [NativeTypeName("ma_uint64")] ulong frameIndex);
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_decoder_get_data_format", ExactSpelling = true)]
-        public static extern ma_result decoder_get_data_format(ma_decoder* pDecoder, ma_format* pFormat, [NativeTypeName("ma_uint32 *")] uint* pChannels, [NativeTypeName("ma_uint32 *")] uint* pSampleRate, [NativeTypeName("ma_channel *")] byte* pChannelMap, [NativeTypeName("size_t")] nuint channelMapCap);
+        public static extern ma_result decoder_get_data_format(ma_decoder* pDecoder, ma_format* pFormat, [NativeTypeName("ma_uint32 *")] uint* pChannels, [NativeTypeName("ma_uint32 *")] uint* pSampleRate, [NativeTypeName("ma_channel *")] byte* pChannelMap, [NativeTypeName("size_t")] UIntPtr channelMapCap);
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_decoder_get_cursor_in_pcm_frames", ExactSpelling = true)]
         public static extern ma_result decoder_get_cursor_in_pcm_frames(ma_decoder* pDecoder, [NativeTypeName("ma_uint64 *")] ulong* pCursor);
@@ -6972,13 +7076,13 @@ namespace Miniaudio
         public static extern ma_result decode_file([NativeTypeName("const char *")] sbyte* pFilePath, ma_decoder_config* pConfig, [NativeTypeName("ma_uint64 *")] ulong* pFrameCountOut, void** ppPCMFramesOut);
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_decode_memory", ExactSpelling = true)]
-        public static extern ma_result decode_memory([NativeTypeName("const void *")] void* pData, [NativeTypeName("size_t")] nuint dataSize, ma_decoder_config* pConfig, [NativeTypeName("ma_uint64 *")] ulong* pFrameCountOut, void** ppPCMFramesOut);
+        public static extern ma_result decode_memory([NativeTypeName("const void *")] void* pData, [NativeTypeName("size_t")] UIntPtr dataSize, ma_decoder_config* pConfig, [NativeTypeName("ma_uint64 *")] ulong* pFrameCountOut, void** ppPCMFramesOut);
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_encoder_config_init", ExactSpelling = true)]
         public static extern ma_encoder_config encoder_config_init(ma_encoding_format encodingFormat, ma_format format, [NativeTypeName("ma_uint32")] uint channels, [NativeTypeName("ma_uint32")] uint sampleRate);
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_encoder_init", ExactSpelling = true)]
-        public static extern ma_result encoder_init([NativeTypeName("ma_encoder_write_proc")] delegate* unmanaged[Cdecl]<ma_encoder*, void*, nuint, nuint*, ma_result> onWrite, [NativeTypeName("ma_encoder_seek_proc")] delegate* unmanaged[Cdecl]<ma_encoder*, long, ma_seek_origin, ma_result> onSeek, void* pUserData, [NativeTypeName("const ma_encoder_config *")] ma_encoder_config* pConfig, ma_encoder* pEncoder);
+        public static extern ma_result encoder_init([NativeTypeName("ma_encoder_write_proc")] IntPtr onWrite, [NativeTypeName("ma_encoder_seek_proc")] IntPtr onSeek, void* pUserData, [NativeTypeName("const ma_encoder_config *")] ma_encoder_config* pConfig, ma_encoder* pEncoder);
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_encoder_init_vfs", ExactSpelling = true)]
         public static extern ma_result encoder_init_vfs([NativeTypeName("ma_vfs *")] void* pVFS, [NativeTypeName("const char *")] sbyte* pFilePath, [NativeTypeName("const ma_encoder_config *")] ma_encoder_config* pConfig, ma_encoder* pEncoder);
@@ -7056,7 +7160,7 @@ namespace Miniaudio
         public static extern ma_noise_config noise_config_init(ma_format format, [NativeTypeName("ma_uint32")] uint channels, ma_noise_type type, [NativeTypeName("ma_int32")] int seed, double amplitude);
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_noise_get_heap_size", ExactSpelling = true)]
-        public static extern ma_result noise_get_heap_size([NativeTypeName("const ma_noise_config *")] ma_noise_config* pConfig, [NativeTypeName("size_t *")] nuint* pHeapSizeInBytes);
+        public static extern ma_result noise_get_heap_size([NativeTypeName("const ma_noise_config *")] ma_noise_config* pConfig, [NativeTypeName("size_t *")] UIntPtr* pHeapSizeInBytes);
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_noise_init_preallocated", ExactSpelling = true)]
         public static extern ma_result noise_init_preallocated([NativeTypeName("const ma_noise_config *")] ma_noise_config* pConfig, void* pHeap, ma_noise* pNoise);
@@ -7110,10 +7214,10 @@ namespace Miniaudio
         public static extern ma_result resource_manager_register_decoded_data_w(ma_resource_manager* pResourceManager, [NativeTypeName("const wchar_t *")] ushort* pName, [NativeTypeName("const void *")] void* pData, [NativeTypeName("ma_uint64")] ulong frameCount, ma_format format, [NativeTypeName("ma_uint32")] uint channels, [NativeTypeName("ma_uint32")] uint sampleRate);
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_resource_manager_register_encoded_data", ExactSpelling = true)]
-        public static extern ma_result resource_manager_register_encoded_data(ma_resource_manager* pResourceManager, [NativeTypeName("const char *")] sbyte* pName, [NativeTypeName("const void *")] void* pData, [NativeTypeName("size_t")] nuint sizeInBytes);
+        public static extern ma_result resource_manager_register_encoded_data(ma_resource_manager* pResourceManager, [NativeTypeName("const char *")] sbyte* pName, [NativeTypeName("const void *")] void* pData, [NativeTypeName("size_t")] UIntPtr sizeInBytes);
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_resource_manager_register_encoded_data_w", ExactSpelling = true)]
-        public static extern ma_result resource_manager_register_encoded_data_w(ma_resource_manager* pResourceManager, [NativeTypeName("const wchar_t *")] ushort* pName, [NativeTypeName("const void *")] void* pData, [NativeTypeName("size_t")] nuint sizeInBytes);
+        public static extern ma_result resource_manager_register_encoded_data_w(ma_resource_manager* pResourceManager, [NativeTypeName("const wchar_t *")] ushort* pName, [NativeTypeName("const void *")] void* pData, [NativeTypeName("size_t")] UIntPtr sizeInBytes);
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_resource_manager_unregister_file", ExactSpelling = true)]
         public static extern ma_result resource_manager_unregister_file(ma_resource_manager* pResourceManager, [NativeTypeName("const char *")] sbyte* pFilePath);
@@ -7149,7 +7253,7 @@ namespace Miniaudio
         public static extern ma_result resource_manager_data_buffer_seek_to_pcm_frame(ma_resource_manager_data_buffer* pDataBuffer, [NativeTypeName("ma_uint64")] ulong frameIndex);
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_resource_manager_data_buffer_get_data_format", ExactSpelling = true)]
-        public static extern ma_result resource_manager_data_buffer_get_data_format(ma_resource_manager_data_buffer* pDataBuffer, ma_format* pFormat, [NativeTypeName("ma_uint32 *")] uint* pChannels, [NativeTypeName("ma_uint32 *")] uint* pSampleRate, [NativeTypeName("ma_channel *")] byte* pChannelMap, [NativeTypeName("size_t")] nuint channelMapCap);
+        public static extern ma_result resource_manager_data_buffer_get_data_format(ma_resource_manager_data_buffer* pDataBuffer, ma_format* pFormat, [NativeTypeName("ma_uint32 *")] uint* pChannels, [NativeTypeName("ma_uint32 *")] uint* pSampleRate, [NativeTypeName("ma_channel *")] byte* pChannelMap, [NativeTypeName("size_t")] UIntPtr channelMapCap);
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_resource_manager_data_buffer_get_cursor_in_pcm_frames", ExactSpelling = true)]
         public static extern ma_result resource_manager_data_buffer_get_cursor_in_pcm_frames(ma_resource_manager_data_buffer* pDataBuffer, [NativeTypeName("ma_uint64 *")] ulong* pCursor);
@@ -7189,7 +7293,7 @@ namespace Miniaudio
         public static extern ma_result resource_manager_data_stream_seek_to_pcm_frame(ma_resource_manager_data_stream* pDataStream, [NativeTypeName("ma_uint64")] ulong frameIndex);
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_resource_manager_data_stream_get_data_format", ExactSpelling = true)]
-        public static extern ma_result resource_manager_data_stream_get_data_format(ma_resource_manager_data_stream* pDataStream, ma_format* pFormat, [NativeTypeName("ma_uint32 *")] uint* pChannels, [NativeTypeName("ma_uint32 *")] uint* pSampleRate, [NativeTypeName("ma_channel *")] byte* pChannelMap, [NativeTypeName("size_t")] nuint channelMapCap);
+        public static extern ma_result resource_manager_data_stream_get_data_format(ma_resource_manager_data_stream* pDataStream, ma_format* pFormat, [NativeTypeName("ma_uint32 *")] uint* pChannels, [NativeTypeName("ma_uint32 *")] uint* pSampleRate, [NativeTypeName("ma_channel *")] byte* pChannelMap, [NativeTypeName("size_t")] UIntPtr channelMapCap);
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_resource_manager_data_stream_get_cursor_in_pcm_frames", ExactSpelling = true)]
         public static extern ma_result resource_manager_data_stream_get_cursor_in_pcm_frames(ma_resource_manager_data_stream* pDataStream, [NativeTypeName("ma_uint64 *")] ulong* pCursor);
@@ -7232,7 +7336,7 @@ namespace Miniaudio
         public static extern ma_result resource_manager_data_source_seek_to_pcm_frame(ma_resource_manager_data_source* pDataSource, [NativeTypeName("ma_uint64")] ulong frameIndex);
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_resource_manager_data_source_get_data_format", ExactSpelling = true)]
-        public static extern ma_result resource_manager_data_source_get_data_format(ma_resource_manager_data_source* pDataSource, ma_format* pFormat, [NativeTypeName("ma_uint32 *")] uint* pChannels, [NativeTypeName("ma_uint32 *")] uint* pSampleRate, [NativeTypeName("ma_channel *")] byte* pChannelMap, [NativeTypeName("size_t")] nuint channelMapCap);
+        public static extern ma_result resource_manager_data_source_get_data_format(ma_resource_manager_data_source* pDataSource, ma_format* pFormat, [NativeTypeName("ma_uint32 *")] uint* pChannels, [NativeTypeName("ma_uint32 *")] uint* pSampleRate, [NativeTypeName("ma_channel *")] byte* pChannelMap, [NativeTypeName("size_t")] UIntPtr channelMapCap);
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_resource_manager_data_source_get_cursor_in_pcm_frames", ExactSpelling = true)]
         public static extern ma_result resource_manager_data_source_get_cursor_in_pcm_frames(ma_resource_manager_data_source* pDataSource, [NativeTypeName("ma_uint64 *")] ulong* pCursor);
@@ -7272,7 +7376,7 @@ namespace Miniaudio
         public static extern ma_node_config node_config_init();
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_node_get_heap_size", ExactSpelling = true)]
-        public static extern ma_result node_get_heap_size(ma_node_graph* pNodeGraph, [NativeTypeName("const ma_node_config *")] ma_node_config* pConfig, [NativeTypeName("size_t *")] nuint* pHeapSizeInBytes);
+        public static extern ma_result node_get_heap_size(ma_node_graph* pNodeGraph, [NativeTypeName("const ma_node_config *")] ma_node_config* pConfig, [NativeTypeName("size_t *")] UIntPtr* pHeapSizeInBytes);
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_node_init_preallocated", ExactSpelling = true)]
         public static extern ma_result node_init_preallocated(ma_node_graph* pNodeGraph, [NativeTypeName("const ma_node_config *")] ma_node_config* pConfig, void* pHeap, [NativeTypeName("ma_node *")] void* pNode);
@@ -7522,7 +7626,7 @@ namespace Miniaudio
         public static extern ma_engine_node_config engine_node_config_init(ma_engine* pEngine, ma_engine_node_type type, [NativeTypeName("ma_uint32")] uint flags);
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_engine_node_get_heap_size", ExactSpelling = true)]
-        public static extern ma_result engine_node_get_heap_size([NativeTypeName("const ma_engine_node_config *")] ma_engine_node_config* pConfig, [NativeTypeName("size_t *")] nuint* pHeapSizeInBytes);
+        public static extern ma_result engine_node_get_heap_size([NativeTypeName("const ma_engine_node_config *")] ma_engine_node_config* pConfig, [NativeTypeName("size_t *")] UIntPtr* pHeapSizeInBytes);
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_engine_node_init_preallocated", ExactSpelling = true)]
         public static extern ma_result engine_node_init_preallocated([NativeTypeName("const ma_engine_node_config *")] ma_engine_node_config* pConfig, void* pHeap, ma_engine_node* pEngineNode);
@@ -7896,7 +8000,7 @@ namespace Miniaudio
         public static extern ma_result sound_seek_to_second(ma_sound* pSound, float seekPointInSeconds);
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_sound_get_data_format", ExactSpelling = true)]
-        public static extern ma_result sound_get_data_format(ma_sound* pSound, ma_format* pFormat, [NativeTypeName("ma_uint32 *")] uint* pChannels, [NativeTypeName("ma_uint32 *")] uint* pSampleRate, [NativeTypeName("ma_channel *")] byte* pChannelMap, [NativeTypeName("size_t")] nuint channelMapCap);
+        public static extern ma_result sound_get_data_format(ma_sound* pSound, ma_format* pFormat, [NativeTypeName("ma_uint32 *")] uint* pChannels, [NativeTypeName("ma_uint32 *")] uint* pSampleRate, [NativeTypeName("ma_channel *")] byte* pChannelMap, [NativeTypeName("size_t")] UIntPtr channelMapCap);
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_sound_get_cursor_in_pcm_frames", ExactSpelling = true)]
         public static extern ma_result sound_get_cursor_in_pcm_frames(ma_sound* pSound, [NativeTypeName("ma_uint64 *")] ulong* pCursor);
@@ -7911,7 +8015,7 @@ namespace Miniaudio
         public static extern ma_result sound_get_length_in_seconds(ma_sound* pSound, float* pLength);
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_sound_set_end_callback", ExactSpelling = true)]
-        public static extern ma_result sound_set_end_callback(ma_sound* pSound, [NativeTypeName("ma_sound_end_proc")] delegate* unmanaged[Cdecl]<void*, ma_sound*, void> callback, void* pUserData);
+        public static extern ma_result sound_set_end_callback(ma_sound* pSound, [NativeTypeName("ma_sound_end_proc")] IntPtr callback, void* pUserData);
 
         [DllImport("miniaudio", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ma_sound_group_init", ExactSpelling = true)]
         public static extern ma_result sound_group_init(ma_engine* pEngine, [NativeTypeName("ma_uint32")] uint flags, [NativeTypeName("ma_sound_group *")] ma_sound* pParentGroup, [NativeTypeName("ma_sound_group *")] ma_sound* pGroup);
