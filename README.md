@@ -59,7 +59,7 @@ internal class Program
 dotnet tool install --global ClangSharpPInvokeGenerator
 git clone https://github.com/cubeww/Miniaudio-CS --recursive
 cd Miniaudio-CS/GenerateBindings
-ClangSharpPInvokeGenerator @generate.gen
+clangSharpPInvokeGenerator --file miniaudio/extras/miniaudio_split/miniaudio.h --libraryPath miniaudio --namespace Miniaudio --methodClassName ma --prefixStrip ma_ --output ../Miniaudio-CS/Miniaudio.cs --config compatible-codegen
 ```
 
 ## Build Native Library
